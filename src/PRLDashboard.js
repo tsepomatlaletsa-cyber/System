@@ -7,7 +7,7 @@ function PRLDashboard() {
 
   const fetchReports = () => {
     const token = localStorage.getItem("token");
-    axios.get("http://localhost:5000/reports", {
+    axios.get("https://system-backend-2-ty55.onrender.com/reports", {
       headers: { Authorization: `Bearer ${token}` }
     })
     .then(res => setReports(res.data))
@@ -20,7 +20,7 @@ function PRLDashboard() {
 
   const submitFeedback = (id) => {
     const token = localStorage.getItem("token");
-    axios.put(`http://localhost:5000/reports/${id}/feedback`, 
+    axios.put(`https://system-backend-2-ty55.onrender.com/reports/${id}/feedback`, 
       { feedback: feedback[id] }, 
       { headers: { Authorization: `Bearer ${token}` } }
     )
