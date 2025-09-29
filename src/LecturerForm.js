@@ -9,7 +9,7 @@ function LecturerForm({ onReportAdded }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await axios.post("http://localhost:5000/reports", form, { headers: { Authorization: `Bearer ${token}` } });
+    await axios.post("https://system-backend-2-ty55.onrender.com/reports", form, { headers: { Authorization: `Bearer ${token}` } });
     setForm({ class_name: "", topic: "", recommendations: "" });
     onReportAdded();
   };
