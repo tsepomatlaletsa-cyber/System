@@ -9,10 +9,10 @@ function StudentDashboard() {
   const token = localStorage.getItem("token");
 
   useEffect(() => {
-    axios.get("http://localhost:5000/ratings", { headers: { Authorization: `Bearer ${token}` } })
+    axios.get("https://system-backend-2-ty55.onrender.com/ratings", { headers: { Authorization: `Bearer ${token}` } })
       .then(res => setLecturers(res.data));
 
-    axios.get("http://localhost:5000/reports", { headers: { Authorization: `Bearer ${token}` } })
+    axios.get("https://system-backend-2-ty55.onrender.com/reports", { headers: { Authorization: `Bearer ${token}` } })
       .then(res => setReports(res.data));
   }, []);
 
@@ -22,11 +22,11 @@ function StudentDashboard() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    axios.post("http://localhost:5000/rate", form, { headers: { Authorization: `Bearer ${token}` } })
+    axios.post("https://system-backend-2-ty55.onrender.com/rate", form, { headers: { Authorization: `Bearer ${token}` } })
       .then(() => {
         alert("Rating submitted!");
         setForm({ lecturer_id: "", rating: 5, comment: "" });
-        return axios.get("http://localhost:5000/ratings", { headers: { Authorization: `Bearer ${token}` } });
+        return axios.get("https://system-backend-2-ty55.onrender.com/ratings", { headers: { Authorization: `Bearer ${token}` } });
       })
       .then(res => setLecturers(res.data));
   };
