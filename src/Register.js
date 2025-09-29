@@ -13,7 +13,7 @@ function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("http://localhost:5000/register", formData);
+      await axios.post("https://system-backend-2-ty55.onrender.com/register", formData);
       alert("Registered successfully!");
       navigate("/");
     } catch {
