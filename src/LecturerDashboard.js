@@ -7,7 +7,7 @@ function LecturerDashboard() {
   const token = localStorage.getItem("token");
 
   const fetchData = () => {
-    axios.get("http://localhost:5000/lecturer-dashboard", { headers: { Authorization: `Bearer ${token}` } })
+    axios.get("https://system-backend-2-ty55.onrender.com/lecturer-dashboard", { headers: { Authorization: `Bearer ${token}` } })
       .then(res => setData(res.data));
   };
 
