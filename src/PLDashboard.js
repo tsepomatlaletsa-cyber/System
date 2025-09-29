@@ -9,20 +9,20 @@ function PLDashboard() {
   const token = localStorage.getItem("token");
 
   useEffect(() => {
-    axios.get("http://localhost:5000/courses", { headers: { Authorization: `Bearer ${token}` } }).then(res => setCourses(res.data));
-    axios.get("http://localhost:5000/lecturers", { headers: { Authorization: `Bearer ${token}` } }).then(res => setLecturers(res.data));
+    axios.get("https://system-backend-2-ty55.onrender.com/courses", { headers: { Authorization: `Bearer ${token}` } }).then(res => setCourses(res.data));
+    axios.get("https://system-backend-2-ty55.onrender.com/lecturers", { headers: { Authorization: `Bearer ${token}` } }).then(res => setLecturers(res.data));
     fetchAssignments();
   }, []);
 
   const fetchAssignments = () => {
-    axios.get("http://localhost:5000/assignments", { headers: { Authorization: `Bearer ${token}` } }).then(res => setAssignments(res.data));
+    axios.get("https://system-backend-2-ty55.onrender.com/assignments", { headers: { Authorization: `Bearer ${token}` } }).then(res => setAssignments(res.data));
   };
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    axios.post("http://localhost:5000/assign-course", form, { headers: { Authorization: `Bearer ${token}` } })
+    axios.post("https://system-backend-2-ty55.onrender.com/assign-course", form, { headers: { Authorization: `Bearer ${token}` } })
       .then(() => { fetchAssignments(); setForm({ course_id: "", lecturer_id: "" }); });
   };
 
