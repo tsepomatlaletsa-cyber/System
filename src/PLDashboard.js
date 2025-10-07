@@ -28,12 +28,12 @@ function PLDashboard() {
       try {
         const [coursesRes, lecturersRes, assignmentsRes, reportsRes, classesRes, ratingsRes] =
           await Promise.all([
-            axios.get("http://localhost:5000/courses", { headers }),
-            axios.get("http://localhost:5000/lecturers", { headers }),
-            axios.get("http://localhost:5000/assignments", { headers }),
-            axios.get("http://localhost:5000/reports", { headers }),
-            axios.get("http://localhost:5000/classes", { headers }),
-            axios.get("http://localhost:5000/ratings", { headers }),
+            axios.get("https://system-backend-2-ty55.onrender.com/courses", { headers }),
+            axios.get("https://system-backend-2-ty55.onrender.com/lecturers", { headers }),
+            axios.get("https://system-backend-2-ty55.onrender.com/assignments", { headers }),
+            axios.get("https://system-backend-2-ty55.onrender.com/reports", { headers }),
+            axios.get("https://system-backend-2-ty55.onrender.com/classes", { headers }),
+            axios.get("https://system-backend-2-ty55.onrender.com/ratings", { headers }),
           ]);
 
         setCourses(coursesRes.data);
@@ -57,7 +57,7 @@ function PLDashboard() {
   const handleAddCourse = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("http://localhost:5000/courses", newCourse, { headers });
+      const res = await axios.post("https://system-backend-2-ty55.onrender.com/courses", newCourse, { headers });
       alert("✅ Course added successfully!");
       setCourses([...courses, res.data]);
       setNewCourse({ course_name: "", course_code: "" });
@@ -72,7 +72,7 @@ function PLDashboard() {
   const handleAssignCourse = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("http://localhost:5000/assign-course", assignCourse, { headers });
+      const res = await axios.post("https://system-backend-2-ty55.onrender.com/assign-course", assignCourse, { headers });
       alert("✅ Course assigned successfully!");
       setAssignments([...assignments, res.data]);
       setAssignCourse({ course_id: "", lecturer_id: "" });
