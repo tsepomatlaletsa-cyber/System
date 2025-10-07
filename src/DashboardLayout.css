@@ -1,0 +1,121 @@
+/* ========== General Layout ========== */
+.dashboard-container {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f4f4f4;
+  font-family: "Poppins", sans-serif;
+  color: #111;
+}
+
+/* ========== Main Content ========== */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ========== Navbar ========== */
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #000; /* LUCT Black */
+  color: #fff;
+  padding: 15px 30px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.navbar h3 {
+  font-size: 20px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #fff;
+}
+
+/* ========== LUCT Logo ========== */
+.navbar::before {
+  content: "";
+  background: url("Limkokwing_Lesotho_Logo.jpg") no-repeat left center;
+  background-size: contain;
+  width: 150px;
+  height: 50px;
+  display: inline-block;
+  margin-right: 15px;
+}
+
+/* ========== User Info ========== */
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.user-info .email {
+  font-size: 14px;
+  color: #e0e0e0;
+}
+
+.logout-btn {
+  background-color: #fff;
+  color: #000;
+  border: 2px solid #000;
+  border-radius: 5px;
+  padding: 6px 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.logout-btn:hover {
+  background-color: #000;
+  color: #fff;
+}
+
+/* ========== Page Content ========== */
+.page-content {
+  flex: 1;
+  padding: 30px;
+}
+
+/* ========== Welcome Banner ========== */
+.welcome-banner {
+  background: #000;
+  color: #fff;
+  padding: 15px 25px;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: 500;
+  margin-bottom: 25px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.welcome-banner strong {
+  margin-left: 6px;
+  color: #ffcc00; /* optional golden accent */
+}
+
+/* ========== Responsive ========== */
+@media (max-width: 768px) {
+  .navbar {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .navbar::before {
+    width: 120px;
+    height: 40px;
+    margin-bottom: 10px;
+  }
+
+  .page-content {
+    padding: 15px;
+  }
+
+  .welcome-banner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
