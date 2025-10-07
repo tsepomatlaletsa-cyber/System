@@ -37,10 +37,10 @@ function PRLDashboard() {
     const fetchAll = async () => {
       try {
         const [coursesRes, reportsRes, classesRes, ratingsRes] = await Promise.all([
-          axios.get(`http://localhost:5000/courses?faculty_id=${faculty_id}`, { headers }),
-          axios.get(`http://localhost:5000/reports?faculty_id=${faculty_id}`, { headers }),
-          axios.get(`http://localhost:5000/classes`, { headers }),
-          axios.get(`http://localhost:5000/ratings?faculty_id=${faculty_id}`, { headers }),
+          axios.get(`https://system-backend-2-ty55.onrender.com/courses?faculty_id=${faculty_id}`, { headers }),
+          axios.get(`https://system-backend-2-ty55.onrender.com/reports?faculty_id=${faculty_id}`, { headers }),
+          axios.get(`https://system-backend-2-ty55.onrender.com/classes`, { headers }),
+          axios.get(`https://system-backend-2-ty55.onrender.com/ratings?faculty_id=${faculty_id}`, { headers }),
         ]);
 
         setCourses(coursesRes.data);
@@ -63,7 +63,7 @@ function PRLDashboard() {
     e.preventDefault();
     try {
       await axios.put(
-        `http://localhost:5000/reports/${feedbackForm.report_id}/feedback`,
+        `https://system-backend-2-ty55.onrender.com/reports/${feedbackForm.report_id}/feedback`,
         { feedback: feedbackForm.feedback },
         { headers }
       );
@@ -71,7 +71,7 @@ function PRLDashboard() {
       setFeedbackForm({ report_id: "", feedback: "" });
 
       const updatedReports = await axios.get(
-        `http://localhost:5000/reports?faculty_id=${faculty_id}`,
+        `https://system-backend-2-ty55.onrender.com/reports?faculty_id=${faculty_id}`,
         { headers }
       );
       setReports(updatedReports.data);
