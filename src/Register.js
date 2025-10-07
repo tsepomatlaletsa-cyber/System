@@ -18,7 +18,7 @@ function Register() {
   // Fetch faculties on load
   useEffect(() => {
     axios
-      .get("http://localhost:5000/faculties")
+      .get("https://system-backend-2-ty55.onrender.com/faculties")
       .then((res) => setFaculties(res.data))
       .catch((err) => console.error("Failed to load faculties", err));
   }, []);
@@ -26,7 +26,7 @@ function Register() {
   // Fetch all classes on load
   useEffect(() => {
     axios
-      .get("http://localhost:5000/classes")
+      .get("https://system-backend-2-ty55.onrender.com/classes")
       .then((res) => setClasses(res.data))
       .catch((err) => console.error("Failed to load classes", err));
   }, []);
@@ -46,7 +46,7 @@ function Register() {
     }
 
     try {
-      await axios.post("http://localhost:5000/auth/register", {
+      await axios.post("https://system-backend-2-ty55.onrender.com/auth/register", {
         name,
         email,
         password,
