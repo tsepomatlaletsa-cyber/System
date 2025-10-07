@@ -7,8 +7,6 @@ import LecturerDashboard from "./LecturerDashboard";
 import StudentDashboard from "./StudentDashboard";
 import PRLDashboard from "./PRLDashboard";
 import PLDashboard from "./PLDashboard";
-import Navbar from "./Navbar";
-import Sidebar from "./Sidebar";
 import ReportsPage from "./ReportsPage";
 
 function App() {
@@ -21,9 +19,9 @@ function App() {
   return (
     <Router>
       <div className="d-flex">
-        {role && <Sidebar role={role} />}
+        
         <div className="flex-grow-1">
-          <Navbar role={role} setRole={setRole} />
+          
           <Routes>
             <Route path="/" element={!role ? <Login onLogin={handleLogin} /> : <Navigate to="/dashboard" />} />
             <Route path="/register" element={<Register />} />

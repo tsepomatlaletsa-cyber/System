@@ -6,7 +6,7 @@ function ReportsPage() {
   const token = localStorage.getItem("token");
 
   useEffect(() => {
-    axios.get("https://system-backend-2-ty55.onrender.com/reports", { headers: { Authorization: `Bearer ${token}` } })
+    axios.get("http://localhost:5000/reports", { headers: { Authorization: `Bearer ${token}` } })
       .then(res => setReports(res.data))
       .catch(err => console.error(err));
   }, []);
