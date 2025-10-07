@@ -37,13 +37,13 @@ function LecturerDashboard() {
     const fetchData = async () => {
       try {
         // 1️⃣ Reports
-        const reportsRes = await axios.get("http://localhost:5000/reports", { headers });
+        const reportsRes = await axios.get("https://system-backend-2-ty55.onrender.com/reports", { headers });
         const myReports = reportsRes.data.filter((r) => r.lecturer_name === name);
         setReports(myReports);
         setStats((prev) => ({ ...prev, totalReports: myReports.length }));
 
         // 2️⃣ Assigned Courses
-        const assignmentsRes = await axios.get("http://localhost:5000/assignments", { headers });
+        const assignmentsRes = await axios.get("https://system-backend-2-ty55.onrender.com/assignments", { headers });
         const assigned = assignmentsRes.data;
         const uniqueCourses = Array.from(
           new Map(
@@ -63,11 +63,11 @@ function LecturerDashboard() {
         setStats((prev) => ({ ...prev, totalCourses: uniqueCourses.length }));
 
         // 3️⃣ Classes
-        const classesRes = await axios.get("http://localhost:5000/classes", { headers });
+        const classesRes = await axios.get("https://system-backend-2-ty55.onrender.com/classes", { headers });
         setClasses(classesRes.data);
 
         // 4️⃣ Ratings
-        const ratingsRes = await axios.get("http://localhost:5000/ratings", { headers });
+        const ratingsRes = await axios.get("https://system-backend-2-ty55.onrender.com/ratings", { headers });
         const myRatings = ratingsRes.data.filter((r) => r.lecturer_name === name);
         setRatings(myRatings);
       } catch (err) {
@@ -90,7 +90,7 @@ function LecturerDashboard() {
     };
 
     axios
-      .post("http://localhost:5000/reports", payload, { headers })
+      .post("https://system-backend-2-ty55.onrender.com/reports", payload, { headers })
       .then((res) => {
         alert("✅ Report submitted successfully!");
         setReports((prev) => [res.data.report, ...prev]);
