@@ -28,7 +28,7 @@ function StudentDashboard() {
 
     // Fetch lecturers
     axios
-      .get("http://localhost:5000/lecturers", { headers })
+      .get("https://system-backend-2-ty55.onrender.com/lecturers", { headers })
       .then((res) => {
         setLecturers(res.data);
         setStats((prev) => ({ ...prev, totalLecturers: res.data.length }));
@@ -37,7 +37,7 @@ function StudentDashboard() {
 
     // Fetch reports
     axios
-      .get("http://localhost:5000/reports", { headers })
+      .get("https://system-backend-2-ty55.onrender.com/reports", { headers })
       .then((res) => {
         setReports(res.data);
         setStats((prev) => ({ ...prev, totalReports: res.data.length }));
@@ -46,7 +46,7 @@ function StudentDashboard() {
 
     // Fetch ratings
     axios
-      .get("http://localhost:5000/ratings", { headers })
+      .get("https://system-backend-2-ty55.onrender.com/ratings", { headers })
       .then((res) => {
         setRatings(res.data);
         setStats((prev) => ({ ...prev, totalRatings: res.data.length }));
@@ -55,7 +55,7 @@ function StudentDashboard() {
 
     // Fetch assigned courses for this student
     axios
-      .get("http://localhost:5000/assignments", { headers })
+      .get("https://system-backend-2-ty55.onrender.com/assignments", { headers })
       .then((res) => {
         setAssignments(res.data);
       })
@@ -70,7 +70,7 @@ function StudentDashboard() {
     const payload = { ...form, lecturer_id: parseInt(form.lecturer_id) };
 
     axios
-      .post("http://localhost:5000/rate", payload, { headers })
+      .post("https://system-backend-2-ty55.onrender.com/rate", payload, { headers })
       .then(() => {
         alert("✅ Rating submitted successfully!");
         setForm({ lecturer_id: "", rating: 5, comment: "" });
