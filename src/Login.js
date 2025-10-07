@@ -11,7 +11,7 @@ function Login({ onLogin }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("http://localhost:5000/login", { emailOrName, password });
+      const res = await axios.post("https://system-backend-2-ty55.onrender.com/login", { emailOrName, password });
 
       // store user data in localStorage
       localStorage.setItem("token", res.data.token);
