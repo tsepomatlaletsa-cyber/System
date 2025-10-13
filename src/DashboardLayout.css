@@ -1,121 +1,91 @@
-/* ========== General Layout ========== */
-.dashboard-container {
-  display: flex;
-  min-height: 100vh;
-  background-color: #f4f4f4;
-  font-family: "Poppins", sans-serif;
-  color: #111;
+/* General page styling */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f4f7fb;
+  margin: 0;
+  padding: 0;
 }
 
-/* ========== Main Content ========== */
-.main-content {
-  flex: 1;
+/* Center form container */
+.form-container {
   display: flex;
-  flex-direction: column;
-}
-
-/* ========== Navbar ========== */
-.navbar {
-  display: flex;
+  justify-content: center;
   align-items: center;
-  justify-content: space-between;
-  background-color: #000; /* LUCT Black */
-  color: #fff;
-  padding: 15px 30px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  min-height: 90vh;
+  padding: 20px;
 }
 
-.navbar h3 {
-  font-size: 20px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: #fff;
-}
-
-/* ========== LUCT Logo ========== */
-.navbar::before {
-  content: "";
-  background: url("Limkokwing_Lesotho_Logo.jpg") no-repeat left center;
-  background-size: contain;
-  width: 150px;
-  height: 50px;
-  display: inline-block;
-  margin-right: 15px;
-}
-
-/* ========== User Info ========== */
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-
-.user-info .email {
-  font-size: 14px;
-  color: #e0e0e0;
-}
-
-.logout-btn {
+/* Card style */
+.card-style {
   background-color: #fff;
-  color: #000;
-  border: 2px solid #000;
-  border-radius: 5px;
-  padding: 6px 14px;
-  font-weight: 600;
-  cursor: pointer;
+  padding: 40px 30px;
+  border-radius: 20px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 450px;
+}
+
+/* Input and select styling */
+.form-control,
+.form-select {
+  height: 45px;
+  padding: 10px 15px;
+  font-size: 0.95rem;
+  border: 1px solid #dee2e6;
   transition: all 0.3s ease;
 }
 
-.logout-btn:hover {
-  background-color: #000;
-  color: #fff;
+.form-control:focus,
+.form-select:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.25);
 }
 
-/* ========== Page Content ========== */
-.page-content {
-  flex: 1;
-  padding: 30px;
+/* Button styling */
+.btn-dark {
+  background-color: #007bff;
+  border: none;
+  height: 50px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
 }
 
-/* ========== Welcome Banner ========== */
-.welcome-banner {
-  background: #000;
-  color: #fff;
-  padding: 15px 25px;
-  border-radius: 8px;
-  font-size: 18px;
-  font-weight: 500;
-  margin-bottom: 25px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+.btn-dark:hover {
+  background-color: #0056b3;
 }
 
-.welcome-banner strong {
-  margin-left: 6px;
-  color: #ffcc00; /* optional golden accent */
+/* Alert styling */
+.alert-danger {
+  background-color: #f8d7da;
+  color: #842029;
+  padding: 12px 15px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  font-size: 0.9rem;
 }
 
-/* ========== Responsive ========== */
-@media (max-width: 768px) {
-  .navbar {
-    flex-direction: column;
-    gap: 10px;
-  }
+/* Footer styling */
+.footer {
+  text-align: center;
+  padding: 15px;
+  font-size: 0.85rem;
+  color: #6c757d;
+  background-color: #f4f7fb;
+}
 
-  .navbar::before {
-    width: 120px;
-    height: 40px;
-    margin-bottom: 10px;
-  }
+/* Link styling */
+.text-decoration-none {
+  text-decoration: none !important;
+}
 
-  .page-content {
-    padding: 15px;
-  }
+.text-decoration-none:hover {
+  text-decoration: underline !important;
+}
 
-  .welcome-banner {
-    flex-direction: column;
-    align-items: flex-start;
+/* Responsive tweaks */
+@media (max-width: 576px) {
+  .card-style {
+    padding: 30px 20px;
   }
 }

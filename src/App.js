@@ -10,19 +10,20 @@ import PLDashboard from "./PLDashboard";
 import ReportsPage from "./ReportsPage";
 
 function App() {
-  const [role, setRole] = useState(localStorage.getItem("role") || null);
+  
+  const [role, setRole] = useState(null);
 
   const handleLogin = (userRole) => {
     setRole(userRole);
+    localStorage.setItem("role", userRole); 
   };
 
   return (
     <Router>
       <div className="d-flex">
-        
         <div className="flex-grow-1">
-          
           <Routes>
+            {/* Always start with login first */}
             <Route path="/" element={!role ? <Login onLogin={handleLogin} /> : <Navigate to="/dashboard" />} />
             <Route path="/register" element={<Register />} />
             <Route path="/reports" element={<ReportsPage />} />
