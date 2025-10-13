@@ -53,32 +53,31 @@ function StudentDashboard() {
   const name = localStorage.getItem("name");
   const headers = { Authorization: `Bearer ${token}` };
 
-  // Fetch data
   const fetchAllData = () => {
     if (!token) return;
 
-    axios.get("http://localhost:5000/lecturers", { headers })
+    axios.get("https://system-backend-2-ty55.onrender.com/lecturers", { headers })
       .then((res) => {
         setLecturers(res.data);
         setStats((prev) => ({ ...prev, totalLecturers: res.data.length }));
       })
       .catch((err) => console.error("Lecturers fetch error:", err));
 
-    axios.get("http://localhost:5000/reports", { headers })
+    axios.get("https://system-backend-2-ty55.onrender.com/reports", { headers })
       .then((res) => {
         setReports(res.data);
         setStats((prev) => ({ ...prev, totalReports: res.data.length }));
       })
       .catch((err) => console.error("Reports fetch error:", err));
 
-    axios.get("http://localhost:5000/ratings", { headers })
+    axios.get("https://system-backend-2-ty55.onrender.com/ratings", { headers })
       .then((res) => {
         setRatings(res.data);
         setStats((prev) => ({ ...prev, totalRatings: res.data.length }));
       })
       .catch((err) => console.error("Ratings fetch error:", err));
 
-    axios.get("http://localhost:5000/assignments", { headers })
+    axios.get("https://system-backend-2-ty55.onrender.com/assignments", { headers })
       .then((res) => setAssignments(res.data))
       .catch((err) => console.error("Assignments fetch error:", err));
   };
@@ -94,7 +93,7 @@ function StudentDashboard() {
     e.preventDefault();
     const payload = { ...form, lecturer_id: parseInt(form.lecturer_id) };
 
-    axios.post("http://localhost:5000/rate", payload, { headers })
+    axios.post("https://system-backend-2-ty55.onrender.com/rate", payload, { headers })
       .then(() => {
         alert("✅ Rating submitted successfully!");
         setForm({ lecturer_id: "", rating: 5, comment: "" });
@@ -108,7 +107,7 @@ function StudentDashboard() {
 
   const handleDeleteRating = (id) => {
     if (!window.confirm("Are you sure you want to delete this rating?")) return;
-    axios.delete(`http://localhost:5000/rate/${id}`, { headers })
+    axios.delete(`https://system-backend-2-ty55.onrender.com/rate/${id}`, { headers })
       .then(() => {
         alert("🗑 Rating deleted successfully!");
         fetchAllData();

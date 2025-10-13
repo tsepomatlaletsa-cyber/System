@@ -22,7 +22,7 @@ import { useNavigate } from "react-router-dom";
 
 
 
-// Simple Shimmer Loader used while switching tabs
+
 const ShimmerLoader = () => (
   <div className="w-100">
     <div className="row g-4">
@@ -41,7 +41,7 @@ const ShimmerLoader = () => (
 );
 
 function SimpleModal({ title, show, onClose, children, footer }) {
-  // prevent scrolling when modal open
+  
   useEffect(() => {
     if (show) document.body.style.overflow = "hidden";
     else document.body.style.overflow = "";
@@ -84,14 +84,14 @@ function SimpleModal({ title, show, onClose, children, footer }) {
 function PLDashboard() {
   const navigate = useNavigate();
 
-  // UI state
+
   const [activeTab, setActiveTab] = useState("dashboard");
   const [collapsed, setCollapsed] = useState(false);
   const [loadingTab, setLoadingTab] = useState(false);
   const [expandedRow, setExpandedRow] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // data state
+ 
   const [courses, setCourses] = useState([]);
   const [lecturers, setLecturers] = useState([]);
   const [assignments, setAssignments] = useState([]);
@@ -99,13 +99,12 @@ function PLDashboard() {
   const [classes, setClasses] = useState([]);
   const [ratings, setRatings] = useState([]);
 
-  // token / user info
+
   const token = localStorage.getItem("token");
   const name = localStorage.getItem("name");
   const email = localStorage.getItem("email");
   const headers = { Authorization: `Bearer ${token}` };
 
-  // Modal control states
   const [showAddCourse, setShowAddCourse] = useState(false);
   const [showEditCourse, setShowEditCourse] = useState(false);
   const [courseToEdit, setCourseToEdit] = useState(null);
@@ -113,24 +112,24 @@ function PLDashboard() {
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null); // {type: 'course'|'assignment', id}
 
-  // forms
+  
   const [addCourseForm, setAddCourseForm] = useState({ course_name: "", course_code: "" });
   const [editCourseForm, setEditCourseForm] = useState({ course_name: "", course_code: "" });
   const [assignForm, setAssignForm] = useState({ course_id: "", lecturer_id: "" });
 
-  // fetch all initial data
+  
   useEffect(() => {
     if (!token) return;
     const fetchAll = async () => {
       try {
         const [coursesRes, lecturersRes, assignmentsRes, reportsRes, classesRes, ratingsRes] =
           await Promise.all([
-            axios.get("http://localhost:5000/courses", { headers }),
-            axios.get("http://localhost:5000/lecturers", { headers }),
-            axios.get("http://localhost:5000/assignments", { headers }),
-            axios.get("http://localhost:5000/reports", { headers }),
-            axios.get("http://localhost:5000/classes", { headers }),
-            axios.get("http://localhost:5000/ratings", { headers }),
+            axios.get("https://system-backend-2-ty55.onrender.com/courses", { headers }),
+            axios.get("https://system-backend-2-ty55.onrender.com/lecturers", { headers }),
+            axios.get("https://system-backend-2-ty55.onrender.com/assignments", { headers }),
+            axios.get("https://system-backend-2-ty55.onrender.com/reports", { headers }),
+            axios.get("https://system-backend-2-ty55.onrender.com/classes", { headers }),
+            axios.get("https://system-backend-2-ty55.onrender.com/ratings", { headers }),
           ]);
 
         setCourses(coursesRes.data || []);
@@ -141,7 +140,7 @@ function PLDashboard() {
         setRatings(ratingsRes.data || []);
       } catch (err) {
         console.error("Data fetch error:", err);
-        // keep UI but log errors
+        
       }
     };
 
@@ -150,7 +149,7 @@ function PLDashboard() {
 
   
 
-  // Simple filter util for search per-tab
+  
   const filterData = (data = [], keys = []) => {
     if (!searchQuery) return data;
     const q = searchQuery.toLowerCase();
@@ -159,14 +158,14 @@ function PLDashboard() {
     );
   };
 
-  // Tab animation variants
+  
   const tabVariants = {
     hidden: { opacity: 0, y: 12 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.28 } },
     exit: { opacity: 0, y: -10, transition: { duration: 0.22 } },
   };
 
-  // Tab change with small shimmer
+ 
   const handleTabChange = (tab) => {
     if (tab === activeTab) return;
     setLoadingTab(true);
@@ -193,7 +192,7 @@ function PLDashboard() {
   const submitAddCourse = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("http://localhost:5000/courses", addCourseForm, { headers });
+      const res = await axios.post("https://system-backend-2-ty55.onrender.com/courses", addCourseForm, { headers });
       setCourses((prev) => [...prev, res.data]);
       setShowAddCourse(false);
     } catch (err) {
@@ -212,7 +211,7 @@ function PLDashboard() {
     e.preventDefault();
     if (!courseToEdit) return;
     try {
-      const res = await axios.put(`http://localhost:5000/courses/${courseToEdit.course_id}`, editCourseForm, { headers });
+      const res = await axios.put(`https://system-backend-2-ty55.onrender.com/courses/${courseToEdit.course_id}`, editCourseForm, { headers });
       setCourses((prev) => prev.map((c) => (c.course_id === courseToEdit.course_id ? res.data : c)));
       setShowEditCourse(false);
       setCourseToEdit(null);
@@ -232,10 +231,10 @@ function PLDashboard() {
     const { type, id } = deleteTarget;
     try {
       if (type === "course") {
-        await axios.delete(`http://localhost:5000/courses/${id}`, { headers });
+        await axios.delete(`https://system-backend-2-ty55.onrender.com/courses/${id}`, { headers });
         setCourses((prev) => prev.filter((c) => c.course_id !== id));
       } else if (type === "assignment") {
-        await axios.delete(`http://localhost:5000/assignments/${id}`, { headers });
+        await axios.delete(`https://system-backend-2-ty55.onrender.com/assignments/${id}`, { headers });
         setAssignments((prev) => prev.filter((a) => a.assignment_id !== id));
       }
       setShowConfirmDelete(false);
@@ -256,7 +255,7 @@ function PLDashboard() {
   const submitAssign = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("http://localhost:5000/assign-course", assignForm, { headers });
+      const res = await axios.post("https://system-backend-2-ty55.onrender.com/assign-course", assignForm, { headers });
       setAssignments((prev) => [...prev, res.data]);
       setShowAssignModal(false);
     } catch (err) {

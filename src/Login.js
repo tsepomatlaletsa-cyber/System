@@ -38,7 +38,7 @@ function Login({ onLogin }) {
         credentials = { emailOrName, password };
       }
 
-      const res = await axios.post("http://localhost:5000/login", credentials);
+      const res = await axios.post("https://system-backend-2-ty55.onrender.com/login", credentials);
 
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("role", res.data.role);

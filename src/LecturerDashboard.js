@@ -15,7 +15,7 @@ import {
   FaSearch,
 } from "react-icons/fa";
 
-// Shimmer Loader
+
 const ShimmerLoader = () => (
   <div className="w-100">
     <div className="row g-4">
@@ -55,22 +55,22 @@ function LecturerDashboard() {
 
     const fetchData = async () => {
       try {
-        const reportsRes = await axios.get("http://localhost:5000/reports", { headers });
+        const reportsRes = await axios.get("https://system-backend-2-ty55.onrender.com/reports", { headers });
         const myReports = reportsRes.data.filter((r) => r.lecturer_name === name);
         setReports(myReports);
         setStats((prev) => ({ ...prev, totalReports: myReports.length }));
 
-        const assignmentsRes = await axios.get("http://localhost:5000/assignments", { headers });
+        const assignmentsRes = await axios.get("https://system-backend-2-ty55.onrender.com/assignments", { headers });
         const uniqueCourses = Array.from(
           new Map(assignmentsRes.data.map((a) => [a.course_id, a])).values()
         );
         setCourses(uniqueCourses);
         setStats((prev) => ({ ...prev, totalCourses: uniqueCourses.length }));
 
-        const classesRes = await axios.get("http://localhost:5000/classes", { headers });
+        const classesRes = await axios.get("https://system-backend-2-ty55.onrender.com/classes", { headers });
         setClasses(classesRes.data);
 
-        const ratingsRes = await axios.get("http://localhost:5000/ratings", { headers });
+        const ratingsRes = await axios.get("https://system-backend-2-ty55.onrender.com/ratings", { headers });
         const myRatings = ratingsRes.data.filter((r) => r.lecturer_name === name);
         setRatings(myRatings);
         setStats((prev) => ({ ...prev, totalRatings: myRatings.length }));
@@ -104,7 +104,7 @@ function LecturerDashboard() {
     const payload = { ...form, lecturer_name: name, lecturer_id: user_id };
 
     axios
-      .post("http://localhost:5000/reports", payload, { headers })
+      .post("https://system-backend-2-ty55.onrender.com/reports", payload, { headers })
       .then((res) => {
         alert("✅ Report submitted successfully!");
         setReports((prev) => [res.data.report, ...prev]);
@@ -143,7 +143,7 @@ function LecturerDashboard() {
     }, 300);
   };
 
-  // Filter reports for monitoring search
+  
   const filteredReports = reports.filter(
     (r) =>
       r.course_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -151,19 +151,17 @@ function LecturerDashboard() {
       r.topic.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Logout function
+  
   const handleLogout = () => {
     localStorage.clear();
     window.location.href = "/";
   };
 
 
-
-  // Add these handlers above the return statement
 const handleDeleteReport = async (report_id) => {
   if (!window.confirm("Are you sure you want to delete this report?")) return;
   try {
-    await axios.delete(`http://localhost:5000/reports/${report_id}`, { headers });
+    await axios.delete(`https://system-backend-2-ty55.onrender.com/reports/${report_id}`, { headers });
     setReports((prev) => prev.filter((r) => r.report_id !== report_id));
     alert("✅ Report deleted successfully!");
   } catch (err) {
@@ -171,8 +169,6 @@ const handleDeleteReport = async (report_id) => {
     alert("⚠️ Error deleting report: " + (err.response?.data?.error || err.message));
   }
 };
-
-
 
 
   return (

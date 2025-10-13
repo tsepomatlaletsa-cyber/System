@@ -74,12 +74,12 @@ function PRLDashboard() {
       try {
         const [coursesRes, reportsRes, classesRes, ratingsRes, lecturersRes, assignmentsRes] =
           await Promise.all([
-            axios.get(`http://localhost:5000/courses${faculty_id ? `?faculty_id=${faculty_id}` : ""}`, { headers }),
-            axios.get(`http://localhost:5000/reports${faculty_id ? `?faculty_id=${faculty_id}` : ""}`, { headers }),
-            axios.get(`http://localhost:5000/classes`, { headers }),
-            axios.get(`http://localhost:5000/ratings${faculty_id ? `?faculty_id=${faculty_id}` : ""}`, { headers }),
-            axios.get(`http://localhost:5000/lecturers`, { headers }),
-            axios.get(`http://localhost:5000/assignments`, { headers }),
+            axios.get(`https://system-backend-2-ty55.onrender.com/courses${faculty_id ? `?faculty_id=${faculty_id}` : ""}`, { headers }),
+            axios.get(`https://system-backend-2-ty55.onrender.com/reports${faculty_id ? `?faculty_id=${faculty_id}` : ""}`, { headers }),
+            axios.get(`https://system-backend-2-ty55.onrender.com/classes`, { headers }),
+            axios.get(`https://system-backend-2-ty55.onrender.com/ratings${faculty_id ? `?faculty_id=${faculty_id}` : ""}`, { headers }),
+            axios.get(`https://system-backend-2-ty55.onrender.com/lecturers`, { headers }),
+            axios.get(`https://system-backend-2-ty55.onrender.com/assignments`, { headers }),
           ]);
 
         setCourses(coursesRes.data || []);
@@ -95,7 +95,7 @@ function PRLDashboard() {
     fetchAll();
   }, [token, faculty_id]);
 
-  // Inline feedback editing
+
   const handleFeedbackChange = (reportId, value) => {
     setReports((prev) =>
       prev.map((r) => (r.report_id === reportId ? { ...r, prl_feedback: value } : r))
@@ -105,11 +105,11 @@ function PRLDashboard() {
   const handleFeedbackSave = async (reportId, feedback) => {
     try {
       await axios.put(
-        `http://localhost:5000/reports/${reportId}/feedback`,
+        `https://system-backend-2-ty55.onrender.com/reports/${reportId}/feedback`,
         { feedback },
         { headers }
       );
-      // Optional: refresh data
+      
     } catch (err) {
       console.error(err);
       alert("⚠️ Error updating feedback");
