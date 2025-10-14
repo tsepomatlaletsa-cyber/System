@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Dashboard from "./Dashboard";
 import "bootstrap/dist/css/bootstrap.min.css";
+import ProfilePicture from "./ProfilePicture";
 import {
   FaChalkboardTeacher,
   FaClipboardList,
@@ -210,8 +211,8 @@ function StudentDashboard() {
             <div className="d-flex align-items-center gap-3">
               <button className="btn btn-light rounded-circle shadow-sm"><FaBell className="text-primary" /></button>
               <div className="d-flex align-items-center">
-                <FaUserCircle size={32} className="text-secondary me-2" />
-                {!collapsed && <div><p className="mb-0 fw-semibold text-dark">{name}</p><small className="text-muted">Student</small></div>}
+                <ProfilePicture  size={32} className="text-secondary me-2" />
+                {!collapsed && <div><p className="mb-0 fw-semibold text-dark"></p><small className="text-muted"></small></div>}
               </div>
             </div>
           </header>

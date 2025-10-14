@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
 function Login({ onLogin }) {
@@ -38,7 +38,10 @@ function Login({ onLogin }) {
         credentials = { emailOrName, password };
       }
 
-      const res = await axios.post("https://system-backend-2-ty55.onrender.com/login", credentials);
+      const res = await axios.post(
+        "https://system-backend-2-ty55.onrender.com/login",
+        credentials
+      );
 
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("role", res.data.role);
@@ -59,63 +62,62 @@ function Login({ onLogin }) {
 
   return (
     <div
-      className="d-flex flex-column justify-content-center align-items-center min-vh-100 position-relative"
       style={{
-        backgroundImage: "url('/Limkokwing_Lesotho_Logo.jpg')",
+        position: "relative",
+        minHeight: "100vh",
+        backgroundImage:
+          "url('https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=1400&q=80')",
         backgroundSize: "cover",
         backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        color: "white",
+        flexDirection: "column",
       }}
     >
       {/* Overlay */}
       <div
-        className="position-absolute top-0 start-0 w-100 h-100"
         style={{
-          backgroundColor: "rgba(0, 0, 0, 0.55)",
-          backdropFilter: "blur(3px)",
+          position: "absolute",
+          width: "100%",
+          height: "100%",
+          backgroundColor: "rgba(0,0,0,0.55)",
           zIndex: 0,
         }}
       ></div>
 
-      {/* Card */}
+      {/* Login Card */}
       <motion.div
         initial={{ opacity: 0, y: 25 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7 }}
-        className="card shadow-lg p-4 p-md-5 text-center text-white border-0"
         style={{
-          maxWidth: "430px",
-          width: "92%",
-          borderRadius: "20px",
-          background: "rgba(255,255,255,0.12)",
-          backdropFilter: "blur(14px)",
+          position: "relative",
           zIndex: 2,
+          background: "rgba(255,255,255,0.1)",
+          backdropFilter: "blur(10px)",
+          borderRadius: "20px",
+          padding: "40px 50px",
+          width: "90%",
+          maxWidth: "450px",
+          textAlign: "center",
         }}
       >
-        <motion.h3
-          initial={{ opacity: 0, y: -15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="fw-bold mb-1"
-        >
-          Welcome to
-        </motion.h3>
         <motion.h2
           initial={{ opacity: 0, y: -15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="fw-bolder mb-3 text-light"
+          transition={{ delay: 0.3 }}
+          style={{ fontWeight: "bold", marginBottom: "10px" }}
         >
           Limkokwing University Portal
         </motion.h2>
-        <p className="text-light mb-4">Sign in to continue to your dashboard</p>
+        <p style={{ marginBottom: "30px" }}>Sign in to continue to your dashboard</p>
 
         {/* Login Form */}
         <form onSubmit={(e) => handleSubmit(e)}>
           <div className="mb-3 text-start">
-            <label className="form-label fw-semibold text-light">
-              Email or Username
-            </label>
+            <label className="form-label fw-semibold">Email or Username</label>
             <input
               type="text"
               className="form-control rounded-3 border-0 shadow-sm"
@@ -127,7 +129,7 @@ function Login({ onLogin }) {
           </div>
 
           <div className="mb-4 text-start">
-            <label className="form-label fw-semibold text-light">Password</label>
+            <label className="form-label fw-semibold">Password</label>
             <input
               type="password"
               className="form-control rounded-3 border-0 shadow-sm"
@@ -141,7 +143,13 @@ function Login({ onLogin }) {
           <motion.button
             whileTap={{ scale: 0.96 }}
             whileHover={{ scale: 1.02 }}
-            className="btn btn-light w-100 rounded-3 fw-bold mb-3"
+            className="btn w-100 mb-3"
+            style={{
+              backgroundColor: "#00bfff",
+              color: "white",
+              fontWeight: "600",
+              borderRadius: "8px",
+            }}
             type="submit"
             disabled={loading}
           >
@@ -152,7 +160,14 @@ function Login({ onLogin }) {
             whileTap={{ scale: 0.96 }}
             whileHover={{ scale: 1.02 }}
             type="button"
-            className="btn btn-outline-light w-100 rounded-3 fw-bold"
+            className="btn w-100 mb-3"
+            style={{
+              backgroundColor: "transparent",
+              border: "2px solid #00bfff",
+              color: "white",
+              fontWeight: "600",
+              borderRadius: "8px",
+            }}
             onClick={() => setShowDemoRoles(!showDemoRoles)}
             disabled={loading}
           >
@@ -160,7 +175,7 @@ function Login({ onLogin }) {
           </motion.button>
         </form>
 
-        {/* Demo Roles Section */}
+        {/* Demo Roles */}
         <AnimatePresence>
           {showDemoRoles && (
             <motion.div
@@ -169,14 +184,18 @@ function Login({ onLogin }) {
               exit={{ opacity: 0, y: -10 }}
               className="mt-4"
             >
-              <p className="text-light mb-2">Select a demo role to explore:</p>
+              <p>Select a demo role:</p>
               <div className="d-flex flex-wrap gap-2 justify-content-center">
                 {["student", "lecturer", "PL", "PRL"].map((role) => (
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     key={role}
-                    className="btn btn-sm btn-light fw-semibold text-dark"
-                    style={{ minWidth: "95px" }}
+                    className="btn btn-sm fw-semibold"
+                    style={{
+                      minWidth: "95px",
+                      backgroundColor: "white",
+                      color: "black",
+                    }}
                     onClick={(e) => handleSubmit(e, true, role)}
                   >
                     {role.charAt(0).toUpperCase() + role.slice(1)}
@@ -187,17 +206,32 @@ function Login({ onLogin }) {
           )}
         </AnimatePresence>
 
-        <p className="mt-4 text-light">
+        <p className="mt-4">
           Don’t have an account?{" "}
-          <a
-            href="/register"
-            className="text-white fw-semibold text-decoration-underline"
+          <Link
+            to="/register"
+            style={{ color: "#00bfff", fontWeight: "bold", textDecoration: "underline" }}
           >
             Register here
-          </a>
+          </Link>
         </p>
       </motion.div>
 
+      {/* Footer */}
+      <footer
+        style={{
+          background: "rgba(0,0,0,0.7)",
+          width: "100%",
+          textAlign: "center",
+          padding: "15px 0",
+          fontSize: "0.9rem",
+          marginTop: "40px",
+          zIndex: 2,
+          color: "white",
+        }}
+      >
+        © {new Date().getFullYear()} Limkokwing University Portal. All Rights Reserved.
+      </footer>
     </div>
   );
 }

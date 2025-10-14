@@ -4,6 +4,7 @@ import axios from "axios";
 import Dashboard from "./Dashboard";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Bar } from "react-chartjs-2";
+import ProfilePicture from "./ProfilePicture";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -226,8 +227,8 @@ function PRLDashboard() {
             <h5 className="fw-bold text-primary mb-0">{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}</h5>
             <div className="d-flex align-items-center gap-3">
               <button className="btn btn-light rounded-circle shadow-sm"><FaBell className="text-primary" /></button>
-              <FaUserCircle size={32} className="text-secondary" />
-              {!collapsed && <div className="text-end"><div className="fw-semibold">{name}</div><small className="text-muted">{email}</small></div>}
+              <ProfilePicture  size={32} className="text-secondary" />
+              {!collapsed && <div className="text-end"><div className="fw-semibold"></div><small className="text-muted"></small></div>}
             </div>
           </header>
 

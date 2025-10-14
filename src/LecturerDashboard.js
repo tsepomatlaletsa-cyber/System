@@ -3,6 +3,7 @@ import axios from "axios";
 import Dashboard from "./Dashboard";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { motion, AnimatePresence } from "framer-motion";
+import ProfilePicture from "./ProfilePicture";
 import {
   FaChalkboardTeacher,
   FaClipboardList,
@@ -240,11 +241,11 @@ const handleDeleteReport = async (report_id) => {
                 <FaBell className="text-primary" />
               </button>
               <div className="d-flex align-items-center">
-                <FaUserCircle size={32} className="text-secondary me-2" />
+                <ProfilePicture size={32} className="text-secondary me-2" />
                 {!collapsed && (
                   <div>
-                    <p className="mb-0 fw-semibold text-dark">{name}</p>
-                    <small className="text-muted">Lecturer</small>
+                    <p className="mb-0 fw-semibold text-dark"></p>
+                    <small className="text-muted"></small>
                   </div>
                 )}
               </div>

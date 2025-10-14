@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Dashboard from "./Dashboard";
 import "bootstrap/dist/css/bootstrap.min.css";
+import ProfilePicture from "./ProfilePicture";
 import {
   FaChalkboardTeacher,
   FaClipboardList,
@@ -10,7 +11,6 @@ import {
   FaChartLine,
   FaSignOutAlt,
   FaBell,
-  FaUserCircle,
   FaBars,
   FaUserTie,
   FaEdit,
@@ -353,11 +353,11 @@ function PLDashboard() {
                 <FaBell className="text-primary" />
               </button>
               <div className="d-flex align-items-center">
-                <FaUserCircle size={32} className="text-secondary me-2" />
+                <ProfilePicture  size={32} className="text-secondary me-2" />
                 {!collapsed && (
                   <div className="text-end">
-                    <div className="mb-0 fw-semibold text-dark">{name}</div>
-                    <small className="text-muted">{email}</small>
+                    <div className="mb-0 fw-semibold text-dark"></div>
+                    <small className="text-muted"></small>
                   </div>
                 )}
               </div>

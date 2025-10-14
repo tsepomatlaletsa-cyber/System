@@ -62,39 +62,56 @@ function Register() {
 
   return (
     <div
-      className="d-flex flex-column justify-content-center align-items-center min-vh-100 position-relative"
       style={{
-        backgroundImage: "url('/Limkokwing_Lesotho_Logo.jpg')",
+        position: "relative",
+        minHeight: "100vh",
+        backgroundImage:
+          "url('https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=1400&q=80')",
         backgroundSize: "cover",
         backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        color: "white",
+        flexDirection: "column",
       }}
     >
       {/* Overlay */}
       <div
-        className="position-absolute top-0 start-0 w-100 h-100"
-        style={{ backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(3px)", zIndex: 0 }}
+        style={{
+          position: "absolute",
+          width: "100%",
+          height: "100%",
+          backgroundColor: "rgba(0,0,0,0.55)",
+          zIndex: 0,
+        }}
       ></div>
 
-      {/* Card */}
+      {/* Register Card */}
       <motion.div
         initial={{ opacity: 0, y: 25 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7 }}
-        className="card shadow-lg p-4 p-md-5 border-0"
         style={{
-          maxWidth: "450px",
-          width: "92%",
-          borderRadius: "20px",
-          background: "rgba(255,255,255,0.12)",
-          backdropFilter: "blur(14px)",
+          position: "relative",
           zIndex: 2,
-          color: "#fff",
+          background: "rgba(255,255,255,0.1)",
+          backdropFilter: "blur(10px)",
+          borderRadius: "20px",
+          padding: "40px 50px",
+          width: "90%",
+          maxWidth: "450px",
+          textAlign: "center",
         }}
       >
-        <motion.h3 initial={{ opacity: 0, y: -15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="fw-bold mb-1">
+        <motion.h2
+          initial={{ opacity: 0, y: -15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          style={{ fontWeight: "bold", marginBottom: "20px" }}
+        >
           Create Your Account
-        </motion.h3>
+        </motion.h2>
 
         <form onSubmit={handleSubmit}>
           <div className="mb-3 text-start">
@@ -135,7 +152,12 @@ function Register() {
 
           <div className="mb-3 text-start">
             <label className="form-label fw-semibold">Role</label>
-            <select className="form-select rounded-3 border-0 shadow-sm" value={role} onChange={(e) => setRole(e.target.value)} required>
+            <select
+              className="form-select rounded-3 border-0 shadow-sm"
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              required
+            >
               <option value="Student">Student</option>
               <option value="Lecturer">Lecturer</option>
               <option value="PRL">PRL</option>
@@ -145,7 +167,12 @@ function Register() {
 
           <div className="mb-3 text-start">
             <label className="form-label fw-semibold">Faculty</label>
-            <select className="form-select rounded-3 border-0 shadow-sm" value={facultyId} onChange={(e) => setFacultyId(e.target.value)} required>
+            <select
+              className="form-select rounded-3 border-0 shadow-sm"
+              value={facultyId}
+              onChange={(e) => setFacultyId(e.target.value)}
+              required
+            >
               <option value="">-- Select Faculty --</option>
               {faculties.map((f) => (
                 <option key={f.faculty_id} value={f.faculty_id}>
@@ -158,7 +185,12 @@ function Register() {
           {role === "Student" && (
             <div className="mb-3 text-start">
               <label className="form-label fw-semibold">Class</label>
-              <select className="form-select rounded-3 border-0 shadow-sm" value={classId} onChange={(e) => setClassId(e.target.value)} required>
+              <select
+                className="form-select rounded-3 border-0 shadow-sm"
+                value={classId}
+                onChange={(e) => setClassId(e.target.value)}
+                required
+              >
                 <option value="">-- Select Class --</option>
                 {classes.map((c) => (
                   <option key={c.class_id} value={c.class_id}>
@@ -173,23 +205,45 @@ function Register() {
             whileTap={{ scale: 0.96 }}
             whileHover={{ scale: 1.02 }}
             type="submit"
-            className="btn btn-light w-100 rounded-3 fw-bold"
+            className="btn w-100 mb-3"
+            style={{
+              backgroundColor: "#00bfff",
+              color: "white",
+              fontWeight: "600",
+              borderRadius: "8px",
+            }}
             disabled={loading}
           >
-            {loading ? (
-              <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-            ) : null}
             {loading ? "Registering..." : "Register"}
           </motion.button>
         </form>
 
-        <p className="mt-4 text-light text-center">
+        <p className="mt-4 text-center">
           Already have an account?{" "}
-          <Link to="/" className="text-white fw-semibold text-decoration-underline">
+          <Link
+            to="/"
+            style={{ color: "#00bfff", fontWeight: "bold", textDecoration: "underline" }}
+          >
             Login here
           </Link>
         </p>
       </motion.div>
+
+      {/* Footer */}
+      <footer
+        style={{
+          background: "rgba(0,0,0,0.7)",
+          width: "100%",
+          textAlign: "center",
+          padding: "15px 0",
+          fontSize: "0.9rem",
+          marginTop: "40px",
+          zIndex: 2,
+          color: "white",
+        }}
+      >
+        © {new Date().getFullYear()} Limkokwing University Portal. All Rights Reserved.
+      </footer>
     </div>
   );
 }
