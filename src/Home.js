@@ -1,7 +1,8 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import jImage from "./j.jpg"; 
+import jImage from "./j.jpg";
+import Navbar from "./Navbar";
 
 function Home() {
   return (
@@ -17,7 +18,7 @@ function Home() {
         alignItems: "center",
         color: "white",
         textAlign: "center",
-        position: "relative", 
+        position: "relative",
       }}
     >
       {/* Overlay */}
@@ -30,6 +31,17 @@ function Home() {
           zIndex: 0,
         }}
       ></div>
+
+      <div
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 3,
+          width: "100%",
+        }}
+      >
+        <Navbar />
+      </div>
 
       {/* Main Content */}
       <motion.div
@@ -124,7 +136,8 @@ function Home() {
           marginTop: "40px",
         }}
       >
-        © {new Date().getFullYear()} Limkokwing University of Creative Technology. All Rights Reserved.
+        © {new Date().getFullYear()} Limkokwing University of Creative
+        Technology. All Rights Reserved.
       </footer>
     </div>
   );

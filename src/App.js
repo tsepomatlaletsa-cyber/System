@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
-import Navbar from "./Navbar"; // ✅ new navbar
 import Home from "./Home";
 import Login from "./Login";
 import Register from "./Register";
@@ -21,7 +20,7 @@ function App() {
 
   return (
     <Router>
-      <Navbar />
+     
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login onLogin={handleLogin} />} />

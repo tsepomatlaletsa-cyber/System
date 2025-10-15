@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import Navbar from "./Navbar";
 
 function Register() {
   const [name, setName] = useState("");
@@ -86,6 +87,17 @@ function Register() {
           zIndex: 0,
         }}
       ></div>
+
+      <div
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 3,
+          width: "100%",
+        }}
+      >
+        <Navbar />
+      </div>
 
       {/* Register Card */}
       <motion.div
@@ -228,6 +240,7 @@ function Register() {
           </Link>
         </p>
       </motion.div>
+    
 
       {/* Footer */}
       <footer

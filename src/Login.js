@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import Navbar from "./Navbar";
 
 function Login({ onLogin }) {
   const [emailOrName, setEmailOrName] = useState("");
@@ -86,6 +87,19 @@ function Login({ onLogin }) {
           zIndex: 0,
         }}
       ></div>
+
+      <div
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 3,
+          width: "100%",
+        }}
+      >
+        <Navbar />
+      </div>
+
+
 
       {/* Login Card */}
       <motion.div
@@ -174,6 +188,7 @@ function Login({ onLogin }) {
             🎯 Try Live Demo
           </motion.button>
         </form>
+        
 
         {/* Demo Roles */}
         <AnimatePresence>
