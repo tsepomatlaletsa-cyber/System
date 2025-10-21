@@ -60,8 +60,6 @@ const ShimmerLoader = () => (
   </div>
 );
 
-
-
 // ---------- CSV Export ----------
 const exportToCSV = (data, filename) => {
   if (!data.length) return;
@@ -241,9 +239,6 @@ function PLDashboard() {
         .slice(0, 3);
     }, [lecturers, ratings]);
   
-
-  
-
   
   const filterData = (data = [], keys = []) => {
     if (!searchQuery) return data;
@@ -1155,7 +1150,9 @@ function PLDashboard() {
             >
               <div className="d-flex align-items-center justify-content-between">
                 <h5 className="mb-0">{lecturer}</h5>
-                <span className="badge bg-primary">{lecturerRatings.length} Ratings</span>
+                <span className="badge bg-primary">
+                  {lecturerRatings.length} Ratings
+                </span>
               </div>
               <div className="mt-2 text-muted small">
                 Avg Rating:{" "}
@@ -1163,7 +1160,8 @@ function PLDashboard() {
                   {(
                     lecturerRatings.reduce((sum, r) => sum + r.rating, 0) /
                     lecturerRatings.length
-                  ).toFixed(1)}
+                  ).toFixed(1)}{" "}
+                  ⭐
                 </strong>
               </div>
             </div>
@@ -1198,7 +1196,7 @@ function PLDashboard() {
               ></button>
             </div>
             <div className="modal-body">
-              <div className="table-responsive">
+              <div className="table-responsive mb-4">
                 <table className="table table-bordered table-hover align-middle">
                   <thead className="table-light">
                     <tr>
@@ -1214,7 +1212,7 @@ function PLDashboard() {
                       .map((r, j) => (
                         <tr key={j}>
                           <td>{r.student_name}</td>
-                          <td>{r.rating}</td>
+                          <td>{r.rating} ⭐</td>
                           <td>{r.comment || "No comment"}</td>
                           <td>{r.created_at || r.date || "N/A"}</td>
                         </tr>
@@ -1222,15 +1220,96 @@ function PLDashboard() {
                   </tbody>
                 </table>
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    )}
-  </div>
-)}
-       
-                </motion.div>
+
+              {/* Ratings Summary Section */}
+              {(() => {
+                const lecturerRatings = ratings.filter(
+                  (r) => r.lecturer_name === selectedLecturer
+                );
+                if (lecturerRatings.length === 0) return null;
+
+                const avgRating =
+                  lecturerRatings.reduce((a, r) => a + r.rating, 0) /
+                  lecturerRatings.length;
+
+                const counts = [1, 2, 3, 4, 5].map(
+                  (n) => lecturerRatings.filter((r) => r.rating === n).length
+                );
+
+                const feedback =
+                  avgRating >= 4.5
+                    ? "Outstanding performance 👏"
+                    : avgRating >= 3.5
+                    ? "Good job! Keep it up 💪"
+                    : avgRating >= 2.5
+                    ? "Fair, needs some improvement ⚙️"
+                    : "Below average — consider engaging more with students ⚠️";
+
+                return (
+                  <div className="border-top pt-3">
+                    <h5 className="fw-bold text-dark mb-2">
+                      Performance Summary
+                    </h5>
+                    <div className="d-flex flex-wrap align-items-center gap-3 mb-3">
+                      <div className="fs-4 fw-bold text-warning">
+                        ⭐ {avgRating.toFixed(1)} / 5
+                      </div>
+                      <div className="text-muted">
+                        Based on {lecturerRatings.length}{" "}
+                        {lecturerRatings.length === 1
+                          ? "rating"
+                          : "ratings"}
+                      </div>
+                    </div>
+
+                    {/* Rating Distribution */}
+                    <div className="mb-3">
+                      {[5, 4, 3, 2, 1].map((star) => {
+                        const count = counts[star - 1];
+                        const percentage =
+                          (count / lecturerRatings.length) * 100 || 0;
+                        return (
+                          <div
+                            key={star}
+                            className="d-flex align-items-center mb-1"
+                          >
+                            <span className="me-2" style={{ width: 35 }}>
+                              {star}⭐
+                            </span>
+                            <div
+                              className="progress flex-grow-1"
+                              style={{
+                                height: 10,
+                                background: "#f1f1f1",
+                              }}
+                            >
+                              <div
+                                className="progress-bar bg-warning"
+                                style={{ width: `${percentage}%` }}
+                              />
+                            </div>
+                            <span className="ms-2 small text-muted">
+                              {count}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div className="alert alert-light border rounded-4 shadow-sm mb-0">
+                      <strong>Summary:</strong> {feedback}
+                     </div>
+                    </div>
+                     );
+                     })()}
+                    </div>
+                   </div>
+                    </div>
+                   </div>
+                 )}
+                </div>
+              )}
+               </motion.div>
               </AnimatePresence>
             )}
           </div>

@@ -552,8 +552,9 @@ function PRLDashboard() {
                           </div>
                         </div>
 
+
+                        {/* Tasks */}
                         <div className="col-12 col-xl-4">
-                          {/* Tasks */}
                           <div className="card p-3 shadow-sm rounded-4 mb-3" style={{ background: cardBg }}>
                             <div className="d-flex align-items-center justify-content-between mb-2">
                               <h6 className="mb-0">Tasks <small className="text-muted">• quick actions</small></h6>
@@ -590,38 +591,82 @@ function PRLDashboard() {
                             </div>
                           </div>
 
-                          {/* Top Lecturers */}
-                          <div className="card p-3 shadow-sm rounded-4" style={{ background: cardBg }}>
-                            <div className="d-flex align-items-center justify-content-between">
-                              <h6 className="mb-0">Top Lecturers</h6>
-                              <div className="small text-muted">Based on ratings</div>
-                            </div>
+  {/*Top Rated Lecturers */}
+<div className="card p-3 shadow-sm rounded-4 mt-3" style={{ background: cardBg }}>
+  <div className="d-flex align-items-center justify-content-between mb-2">
+    <h6 className="mb-0 fw-bold">Top Rated Lecturers</h6>
+    <small className="text-muted">Based on student feedback</small>
+  </div>
 
-                            <table className="table table-sm mt-3 mb-0">
-                              <thead>
-                                <tr>
-                                  <th>Name</th>
-                                  <th className="text-end">Avg</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {topLecturers.map((l, i) => (
-                                  <tr key={i}>
-                                    <td>{l.lecturer_name}</td>
-                                    <td className="text-end">{l.avgRating}</td>
-                                  </tr>
-                                ))}
-                                {!topLecturers.length && (
-                                  <tr><td colSpan={2} className="text-muted">No ratings yet</td></tr>
-                                )}
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-                      </div>
-                    </>
-                  )}
+  <div className="table-responsive">
+    <table className="table table-sm table-hover align-middle mt-2 mb-0">
+      <thead className="table-light">
+        <tr>
+          <th>#</th>
+          <th>Lecturer</th>
+          <th className="text-end">Average Rating ⭐</th>
+        </tr>
+      </thead>
+      <tbody>
+        {topLecturers && topLecturers.length > 0 ? (
 
+    
+    [...topLecturers]
+      .sort((a, b) => parseFloat(b.avgRating || 0) - parseFloat(a.avgRating || 0))
+      .map((l, i) => {
+        const lecturerName = l.lecturer_name || l.name || l.full_name || "N/A";
+        const avgRating = parseFloat(l.avgRating || 0).toFixed(1);
+
+
+            return (
+              <tr key={i}>
+    <td className="fw-semibold text-muted">{i + 1}</td>
+    <td>{l.lecturer_name || l.name || l.full_name || "N/A"}</td>
+    <td className="text-end fw-bold text-warning">{parseFloat(l.avgRating || 0).toFixed(1)}</td>
+  </tr>
+);
+})
+
+        ) : (
+          <tr>
+            <td colSpan={3} className="text-center text-muted py-3">
+              No ratings yet
+            </td>
+          </tr>
+        )}
+      </tbody>
+    </table>
+  </div>
+
+  {/* Summary Footer */}
+  {topLecturers && topLecturers.length > 0 && (
+    <div className="mt-3 small text-muted border-top pt-2">
+      <strong>Summary:</strong>{" "}
+      {topLecturers[0].avgRating >= 4.5
+        ? "Excellent teaching performance across lecturers."
+        : topLecturers[0].avgRating >= 3.5
+        ? "Good ratings overall with room for improvement."
+        : "Average ratings detected — encourage student engagement."}
+    </div>
+  )}
+
+  {/* See All Ratings Button */}
+  <div className="text-center mt-3">
+    <button
+      className="btn btn-sm btn-outline-primary rounded-pill px-4"
+      onClick={() => {
+        setActiveTab("ratings");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }}
+    >
+      See All Ratings
+    </button>
+  </div>
+</div>
+</div>
+</div>
+</>
+)}
 
 {/* -------- LECTURERS TAB -------- */}
 {activeTab === "lecturers" && (
@@ -1038,7 +1083,7 @@ function PRLDashboard() {
               <td>{i + 1}</td>
               <td>{c.class_name}</td>
               <td>{c.year_of_study || "N/A"}</td>
-              <td>{c.faculty_name}</td>
+              <td>{c.faculty_name || "N/A"}</td>
               <td>{c.description || "-"}</td>
             </tr>
           ))}
@@ -1046,125 +1091,213 @@ function PRLDashboard() {
       </table>
     </div>
   </div>
-)}
+)}    
 
-  {/* ----------------- Ratings Tab ----------------- */}
-  {activeTab === "ratings" && (
-    <div>
-      <div className="mb-3 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
-        <h4 className="mb-0">Ratings</h4>
-        <input
-          type="text"
-          placeholder="Search Lecturers..."
-          className="form-control"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          style={{ minWidth: 220 }}
-        />
-        <button
-          className="btn btn-outline-primary d-flex align-items-center justify-content-center"
-          onClick={() => exportToCSV(filterData(ratings, []), "ratings.csv")}
-        >
-          <FaDownload className="me-1" /> CSV
-        </button>
-      </div>
-  
-      {/* Grouped Lecturers */}
-      <div className="row g-3">
-        {Object.entries(
-          ratings.reduce((acc, r) => {
-            if (!acc[r.lecturer_name]) acc[r.lecturer_name] = [];
-            acc[r.lecturer_name].push(r);
-            return acc;
-          }, {})
+
+{/* ----------------- Ratings Tab ----------------- */}
+{activeTab === "ratings" && (
+  <div>
+    <div className="mb-3 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+      <h4 className="mb-0">Ratings</h4>
+      <input
+        type="text"
+        placeholder="Search Lecturers..."
+        className="form-control"
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        style={{ minWidth: 220 }}
+      />
+      <button
+        className="btn btn-outline-primary d-flex align-items-center justify-content-center"
+        onClick={() => exportToCSV(filterData(ratings, []), "ratings.csv")}
+      >
+        <FaDownload className="me-1" /> CSV
+      </button>
+    </div>
+
+    {/* Grouped Lecturers */}
+    <div className="row g-3">
+      {Object.entries(
+        ratings.reduce((acc, r) => {
+          if (!acc[r.lecturer_name]) acc[r.lecturer_name] = [];
+          acc[r.lecturer_name].push(r);
+          return acc;
+        }, {})
+      )
+        .filter(([name]) =>
+          name.toLowerCase().includes(searchQuery.toLowerCase())
         )
-          .filter(([name]) =>
-            name.toLowerCase().includes(searchQuery.toLowerCase())
-          )
-          .map(([lecturer, lecturerRatings], i) => (
-            <div key={i} className="col-12 col-md-6 col-lg-4">
-              <div
-                className="card shadow-sm border-0 rounded-4 p-3 h-100"
-                style={{ cursor: "pointer", transition: "0.3s" }}
-                onClick={() => setSelectedLecturer(lecturer)}
-              >
-                <div className="d-flex align-items-center justify-content-between">
-                  <h5 className="mb-0">{lecturer}</h5>
-                  <span className="badge bg-primary">{lecturerRatings.length} Ratings</span>
-                </div>
-                <div className="mt-2 text-muted small">
-                  Avg Rating:{" "}
-                  <strong>
-                    {(
-                      lecturerRatings.reduce((sum, r) => sum + r.rating, 0) /
-                      lecturerRatings.length
-                    ).toFixed(1)}
-                  </strong>
-                </div>
+        .map(([lecturer, lecturerRatings], i) => (
+          <div key={i} className="col-12 col-md-6 col-lg-4">
+            <div
+              className="card shadow-sm border-0 rounded-4 p-3 h-100"
+              style={{ cursor: "pointer", transition: "0.3s" }}
+              onClick={() => setSelectedLecturer(lecturer)}
+            >
+              <div className="d-flex align-items-center justify-content-between">
+                <h5 className="mb-0">{lecturer}</h5>
+                <span className="badge bg-primary">
+                  {lecturerRatings.length} Ratings
+                </span>
               </div>
-            </div>
-          ))}
-  
-        {ratings.length === 0 && (
-          <div className="text-center text-muted mt-3">No ratings found</div>
-        )}
-      </div>
-  
-      {/* Lecturer Detail Modal */}
-      {selectedLecturer && (
-        <div
-          className="modal fade show d-block"
-          style={{ background: "rgba(0,0,0,0.6)" }}
-          onClick={() => setSelectedLecturer(null)}
-        >
-          <div
-            className="modal-dialog modal-lg modal-dialog-centered"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="modal-content rounded-4 border-0 shadow">
-              <div className="modal-header border-0">
-                <h5 className="modal-title">
-                  Ratings for {selectedLecturer}
-                </h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setSelectedLecturer(null)}
-                ></button>
-              </div>
-              <div className="modal-body">
-                <div className="table-responsive">
-                  <table className="table table-bordered table-hover align-middle">
-                    <thead className="table-light">
-                      <tr>
-                        <th>Student</th>
-                        <th>Rating</th>
-                        <th>Comment</th>
-                        <th>Date</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {ratings
-                        .filter((r) => r.lecturer_name === selectedLecturer)
-                        .map((r, j) => (
-                          <tr key={j}>
-                            <td>{r.student_name}</td>
-                            <td>{r.rating}</td>
-                            <td>{r.comment || "No comment"}</td>
-                            <td>{r.created_at || r.date || "N/A"}</td>
-                          </tr>
-                        ))}
-                    </tbody>
-                  </table>
-                </div>
+              <div className="mt-2 text-muted small">
+                Avg Rating:{" "}
+                <strong>
+                  {(
+                    lecturerRatings.reduce((sum, r) => sum + r.rating, 0) /
+                    lecturerRatings.length
+                  ).toFixed(1)}{" "}
+                  ⭐
+                </strong>
               </div>
             </div>
           </div>
-        </div>
+        ))}
+
+      {ratings.length === 0 && (
+        <div className="text-center text-muted mt-3">No ratings found</div>
       )}
     </div>
-  )}    
-  
+
+    {/* Lecturer Detail Modal */}
+    {selectedLecturer && (
+      <div
+        className="modal fade show d-block"
+        style={{ background: "rgba(0,0,0,0.6)" }}
+        onClick={() => setSelectedLecturer(null)}
+      >
+        <div
+          className="modal-dialog modal-lg modal-dialog-centered"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="modal-content rounded-4 border-0 shadow">
+            <div className="modal-header border-0">
+              <h5 className="modal-title">
+                Ratings for {selectedLecturer}
+              </h5>
+              <button
+                type="button"
+                className="btn-close"
+                onClick={() => setSelectedLecturer(null)}
+              ></button>
+            </div>
+            <div className="modal-body">
+              <div className="table-responsive mb-4">
+                <table className="table table-bordered table-hover align-middle">
+                  <thead className="table-light">
+                    <tr>
+                      <th>Student</th>
+                      <th>Rating</th>
+                      <th>Comment</th>
+                      <th>Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ratings
+                      .filter((r) => r.lecturer_name === selectedLecturer)
+                      .map((r, j) => (
+                        <tr key={j}>
+                          <td>{r.student_name}</td>
+                          <td>{r.rating} ⭐</td>
+                          <td>{r.comment || "No comment"}</td>
+                          <td>{r.created_at || r.date || "N/A"}</td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Ratings Summary Section */}
+              {(() => {
+                const lecturerRatings = ratings.filter(
+                  (r) => r.lecturer_name === selectedLecturer
+                );
+                if (lecturerRatings.length === 0) return null;
+
+                const avgRating =
+                  lecturerRatings.reduce((a, r) => a + r.rating, 0) /
+                  lecturerRatings.length;
+
+                const counts = [1, 2, 3, 4, 5].map(
+                  (n) => lecturerRatings.filter((r) => r.rating === n).length
+                );
+
+                const feedback =
+                  avgRating >= 4.5
+                    ? "Outstanding performance 👏"
+                    : avgRating >= 3.5
+                    ? "Good job! Keep it up 💪"
+                    : avgRating >= 2.5
+                    ? "Fair, needs some improvement ⚙️"
+                    : "Below average — consider engaging more with students ⚠️";
+
+                return (
+                  <div className="border-top pt-3">
+                    <h5 className="fw-bold text-dark mb-2">
+                      Performance Summary
+                    </h5>
+                    <div className="d-flex flex-wrap align-items-center gap-3 mb-3">
+                      <div className="fs-4 fw-bold text-warning">
+                        ⭐ {avgRating.toFixed(1)} / 5
+                      </div>
+                      <div className="text-muted">
+                        Based on {lecturerRatings.length}{" "}
+                        {lecturerRatings.length === 1
+                          ? "rating"
+                          : "ratings"}
+                      </div>
+                    </div>
+
+                    {/* Rating Distribution */}
+                    <div className="mb-3">
+                      {[5, 4, 3, 2, 1].map((star) => {
+                        const count = counts[star - 1];
+                        const percentage =
+                          (count / lecturerRatings.length) * 100 || 0;
+                        return (
+                          <div
+                            key={star}
+                            className="d-flex align-items-center mb-1"
+                          >
+                            <span className="me-2" style={{ width: 35 }}>
+                              {star}⭐
+                            </span>
+                            <div
+                              className="progress flex-grow-1"
+                              style={{
+                                height: 10,
+                                background: "#f1f1f1",
+                              }}
+                            >
+                              <div
+                                className="progress-bar bg-warning"
+                                style={{ width: `${percentage}%` }}
+                              />
+                            </div>
+                            <span className="ms-2 small text-muted">
+                              {count}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div className="alert alert-light border rounded-4 shadow-sm mb-0">
+                      <strong>Summary:</strong> {feedback}
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+  </div>
+)}
+
+
+
    </motion.div>
     </AnimatePresence>
     )}

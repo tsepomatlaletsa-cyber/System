@@ -855,7 +855,7 @@ const handleDeleteReport = async (report_id) => {
   </div>
 )}
 
-{/* -------- MONITORING TAB (keeps chart but expands area) -------- */}
+                  {/*MONITORING TAB */}
                   {activeTab === "monitoring" && (
                     <div>
                       <h4 className="mb-3">Monitoring Overview</h4>
@@ -891,43 +891,121 @@ const handleDeleteReport = async (report_id) => {
                   
 
                  
-                  {/* Ratings */}
-                  {activeTab === "ratings" && (
-                    <div className="card shadow-sm p-4 mt-3 border-0 rounded-4">
-                      <h4 className="fw-bold mb-3 text-dark">Student Ratings</h4>
-                      <div className="table-responsive">
-                        <table className="table table-bordered table-hover align-middle">
-                         <thead className="table-light">
-                            <tr>
-                              <th>#</th>
-                              <th>Rating</th>
-                              <th>Comment</th>
-                              <th>Date</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {ratings.map((r, i) => (
-                              <tr key={r.rating_id}>
-                                <td>{i + 1}</td>
-                                <td>{r.rating}</td>
-                                <td>{r.comment || "-"}</td>
-                                <td>{r.created_at}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  )}
-                </motion.div>
-              </AnimatePresence>
-            )}
-          </section>
+{/* Ratings */}
+{activeTab === "ratings" && (
+  <div className="card shadow-sm p-4 mt-3 border-0 rounded-4">
+    <h4 className="fw-bold mb-3 text-dark">Student Ratings</h4>
+
+    {/* Ratings Table */}
+    <div className="table-responsive mb-4">
+      <table className="table table-bordered table-hover align-middle">
+        <thead className="table-light">
+          <tr>
+            <th>#</th>
+            <th>Rating</th>
+            <th>Comment</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {ratings.length > 0 ? (
+            ratings.map((r, i) => (
+              <tr key={r.rating_id}>
+                <td>{i + 1}</td>
+                <td className="fw-bold text-warning">{r.rating} ⭐</td>
+                <td>{r.comment || "-"}</td>
+                <td>{new Date(r.created_at).toLocaleDateString()}</td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="4" className="text-center text-muted py-3">
+                No ratings available
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+
+    {/* Ratings Evaluation Summary */}
+    {ratings.length > 0 && (() => {
+      const avgRating =
+        ratings.reduce((acc, r) => acc + (r.rating || 0), 0) / ratings.length;
+
+      const counts = [1, 2, 3, 4, 5].map(
+        (n) => ratings.filter((r) => r.rating === n).length
+      );
+
+      const feedback =
+        avgRating >= 4.5
+          ? "Outstanding performance 👏"
+          : avgRating >= 3.5
+          ? "Good job! Keep it up 💪"
+          : avgRating >= 2.5
+          ? "Fair, needs some improvement ⚙️"
+          : "Below average — consider engaging more with students ⚠️";
+
+      return (
+        <div className="border-top pt-3 mt-2">
+          <h5 className="fw-bold mb-2 text-dark">Performance Summary</h5>
+
+          <div className="d-flex flex-wrap align-items-center gap-3 mb-3">
+            <div className="fs-4 fw-bold text-warning">
+              ⭐ {avgRating.toFixed(1)} / 5
+            </div>
+            <div className="text-muted">
+              Based on {ratings.length}{" "}
+              {ratings.length === 1 ? "rating" : "ratings"}
+            </div>
+          </div>
+
+          {/* Rating Distribution Bars */}
+          <div className="mb-3">
+            {[5, 4, 3, 2, 1].map((star) => {
+              const count = counts[star - 1];
+              const percentage = (count / ratings.length) * 100 || 0;
+              return (
+                <div key={star} className="d-flex align-items-center mb-1">
+                  <span className="me-2" style={{ width: 35 }}>
+                    {star}⭐
+                  </span>
+                  <div
+                    className="progress flex-grow-1"
+                    style={{ height: 10, background: "#f1f1f1" }}
+                  >
+                    <div
+                      className="progress-bar bg-warning"
+                      style={{ width: `${percentage}%` }}
+                    />
+                  </div>
+                  <span className="ms-2 small text-muted">{count}</span>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Feedback Text */}
+          <div className="alert alert-light border rounded-4 shadow-sm mb-0">
+            <strong>Summary:</strong> {feedback}
+          </div>
         </div>
-        
-      </div>
-    </Dashboard>
-  );
+      );
+    })()}
+  </div>
+)}
+
+{/* End of Tabs */}
+</motion.div>
+</AnimatePresence>
+)}
+</section>
+</div>
+
+</div>
+</Dashboard>
+);
 }
 
 export default LecturerDashboard;
+                  
