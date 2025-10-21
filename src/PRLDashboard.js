@@ -88,6 +88,11 @@ function PRLDashboard() {
   // UI state
   const [activeTab, setActiveTab] = useState("dashboard");
   const [collapsed, setCollapsed] = useState(false);
+  const [selectedLecturer, setSelectedLecturer] = useState(null);
+  const [expandedLecturer, setExpandedLecturer] = useState(null);
+  const [expandedReport, setExpandedReport] = useState(null);
+
+
   const [loadingTab, setLoadingTab] = useState(false);
   const [darkMode, setDarkMode] = useState(() => {
     try {
@@ -510,10 +515,9 @@ function PRLDashboard() {
                           </div>
                         </div>
                       </div>
-                      {/* rest of dashboard content remains same */}
 
 
- {/* Main grid: left chart + right tasks + top lecturers */}
+                     {/* Main grid: left chart + right tasks + top lecturers */}
                       <div className="row g-4">
                         <div className="col-12 col-xl-8">
                           <div className="card p-3 shadow-sm rounded-4" style={{ background: cardBg }}>
@@ -622,7 +626,7 @@ function PRLDashboard() {
 {/* -------- LECTURERS TAB -------- */}
 {activeTab === "lecturers" && (
   <div>
-   
+    {/* Header */}
     <div className="mb-3 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
       <h4 className="mb-2 mb-md-0">Lecturers</h4>
       <div className="d-flex w-100 w-md-auto gap-2 flex-column flex-md-row">
@@ -637,9 +641,9 @@ function PRLDashboard() {
           className="btn btn-outline-primary d-flex align-items-center justify-content-center"
           onClick={() => {
             const exportData = filterData(lecturers, ["lecturer_name", "email", "faculty_name"]).map((l) => ({
-              "Name": l.lecturer_name,
-              "Email": l.email || "",
-              "Faculty": l.faculty_name || "",
+              Name: l.lecturer_name || l.name || l.full_name || "N/A",
+              Email: l.email || "",
+              Faculty: l.faculty_name || "",
             }));
             exportToCSV(exportData, "lecturers.csv");
           }}
@@ -650,29 +654,86 @@ function PRLDashboard() {
     </div>
 
     {/* Table */}
-    <div className="table-responsive card p-3" style={{ background: cardBg }}>
-      <table className="table table-striped align-middle mb-0">
+    <div className="table-responsive card p-3" style={{ background: "" }}>
+      <table className="table table-bordered table-hover align-middle mb-0">
         <thead className="table-light">
           <tr>
             <th>#</th>
             <th>Name</th>
             <th>Email</th>
             <th>Faculty</th>
-            
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
-          {filterData(lecturers, ["lecturer_name", "email", "faculty_name"]).map((l, i) => (
-            <tr key={l.lecturer_id || i}>
-              <td>{i + 1}</td>
-              <td>{l.lecturer_name}</td>
-              <td>{l.email || "N/A"}</td>
-              <td>{l.faculty_name || "N/A"}</td>
-            </tr>
-          ))}
+          {filterData(lecturers, ["lecturer_name", "email", "faculty_name"]).map((l, i) => {
+            const lecturerName = l.lecturer_name || l.name || l.full_name || "N/A";
+            const lecturerReports = reports.filter(r => r.lecturer_name === lecturerName);
+            const lecturerRatings = ratings.filter(rt => rt.lecturer_name === lecturerName);
+            const isExpanded = expandedRow === l.lecturer_id;
+
+            return (
+              <React.Fragment key={l.lecturer_id || i}>
+                <tr>
+                  <td>{i + 1}</td>
+                  <td>{lecturerName}</td>
+                  <td>{l.email || "N/A"}</td>
+                  <td>{l.faculty_name || "N/A"}</td>
+                  <td>
+                    <button
+                      className="btn btn-sm btn-outline-dark"
+                      onClick={() => setExpandedRow(isExpanded ? null : l.lecturer_id)}
+                    >
+                      {isExpanded ? "Hide" : "View More"}
+                    </button>
+                  </td>
+                </tr>
+
+                {isExpanded && (
+                  <tr>
+                    <td colSpan={5}>
+                      <div className="p-3 border rounded bg-light">
+                        {/* Lecturer Reports */}
+                        <h6 className="fw-bold mb-2">Reports</h6>
+                        {lecturerReports.length > 0 ? (
+                          <ul className="list-unstyled mb-3">
+                            {lecturerReports.map((rep, idx) => (
+                              <li key={idx} className="mb-2">
+                                <strong>{rep.class_name}</strong> — {rep.topic || "No topic"}  
+                                <span className="text-muted"> ({rep.date_of_lecture || "N/A"})</span>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="text-muted mb-3">No reports available</p>
+                        )}
+
+                        {/* Lecturer Ratings */}
+                        <h6 className="fw-bold mb-2">Ratings</h6>
+                        {lecturerRatings.length > 0 ? (
+                          <ul className="list-unstyled">
+                            {lecturerRatings.map((rt, idx) => (
+                              <li key={idx} className="mb-1">
+                                ⭐ {rt.rating} — <em>{rt.comment || "No comment"}</em>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="text-muted">No ratings available</p>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
+            );
+          })}
+
           {!filterData(lecturers, ["lecturer_name", "email", "faculty_name"]).length && (
             <tr>
-              <td colSpan={5} className="text-muted text-center">No lecturers found</td>
+              <td colSpan={5} className="text-muted text-center">
+                No lecturers found
+              </td>
             </tr>
           )}
         </tbody>
@@ -680,7 +741,6 @@ function PRLDashboard() {
     </div>
   </div>
 )}
-
 
 
 {/* -------- COURSES TAB (exportable) -------- */}
@@ -711,8 +771,8 @@ function PRLDashboard() {
       </div>
     </div>
 
-    <div className="table-responsive card p-3" style={{ background: cardBg }}>
-      <table className="table table-striped align-middle mb-0">
+      <div className="table-responsive card p-3 mb-4" style={{ background: "" }}>
+       <table className="table table-bordered table-hover align-middle mb-0">
         <thead className="table-light">
           <tr>
             <th>#</th>
@@ -740,7 +800,7 @@ function PRLDashboard() {
 
 {activeTab === "reports" && (
   <div>
-    {/* Header + Search + CSV Export */}
+    {/* Header + Search + Export */}
     <div className="mb-3 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
       <h4 className="mb-2 mb-md-0">Lecturer Reports & PRL Feedback</h4>
       <div className="d-flex w-100 w-md-auto gap-2 flex-column flex-md-row">
@@ -753,81 +813,153 @@ function PRLDashboard() {
         />
         <button
           className="btn btn-outline-primary d-flex align-items-center justify-content-center"
-          onClick={() => exportToCSV(filterData(reports, ["course_name", "class_name", "lecturer_name", "topic"]), "reports.csv")}
+          onClick={() =>
+            exportToCSV(
+              filterData(reports, [
+                "course_name",
+                "class_name",
+                "lecturer_name",
+                "topic",
+              ]),
+              "reports.csv"
+            )
+          }
         >
           <FaDownload className="me-1" /> CSV
         </button>
       </div>
     </div>
 
-    {/* Table */}
-    <div className="table-responsive card p-3 mb-4" style={{ background: cardBg }}>
-      <table className="table table-bordered table-hover align-middle mb-0">
-        <thead className="table-light">
-          <tr>
-            <th>#</th>
-            <th>Class</th>
-            <th>Lecturer</th>
-            <th>Date</th>
-            <th>Feedback</th>
-            <th>Details</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filterData(reports, ["course_name", "class_name", "lecturer_name", "topic"]).map((r, i) => (
-            <React.Fragment key={r.report_id || i}>
-              <tr>
-                <td>{i + 1}</td>
-                <td>{r.class_name}</td>
-                <td>{r.lecturer_name}</td>
-                <td>{r.date_of_lecture || "N/A"}</td>
-                {/* Feedback always visible */}
-                <td style={{ minWidth: 220 }}>
-                  <input
-                    type="text"
-                    value={r.prl_feedback || ""}
-                    onChange={(e) => handleFeedbackChange(r.report_id, e.target.value)}
-                    onBlur={() => handleFeedbackSave(r.report_id, r.prl_feedback)}
-                    className="form-control form-control-sm"
-                  />
-                </td>
-                <td>
-                  <button
-                    className="btn btn-sm btn-outline-dark"
-                    type="button"
-                    onClick={() => setExpandedRow(expandedRow === r.report_id ? null : r.report_id)}
-                  >
-                    {expandedRow === r.report_id ? "Hide" : "View More"}
-                  </button>
-                </td>
-              </tr>
+    {/* Grouped by Lecturer */}
+    <div className="card p-3 shadow-sm rounded-4" style={{ background: cardBg }}>
+      {Object.entries(
+        filterData(reports, [
+          "course_name",
+          "class_name",
+          "lecturer_name",
+          "topic",
+        ]).reduce((acc, r) => {
+          const lecturer = r.lecturer_name || "Unknown Lecturer";
+          if (!acc[lecturer]) acc[lecturer] = [];
+          acc[lecturer].push(r);
+          return acc;
+        }, {})
+      ).map(([lecturer, lecturerReports], index) => (
+        <div key={index} className="mb-4">
+          {/* Lecturer Header */}
+          <div
+            className="d-flex justify-content-between align-items-center p-3 border rounded bg-light"
+            style={{ cursor: "pointer" }}
+            onClick={() =>
+              setExpandedLecturer(expandedLecturer === lecturer ? null : lecturer)
+            }
+          >
+            <h5 className="mb-0">
+              <FaUserTie className="me-2 text-primary" />
+              {lecturer}
+            </h5>
+            <span className="badge bg-secondary">
+              {lecturerReports.length} Reports
+            </span>
+          </div>
 
-              {expandedRow === r.report_id && (
-                <tr>
-                  <td colSpan={6}>
-                    <div className="p-3 border rounded bg-light">
-                      <p><strong>Topic:</strong> {r.topic || "N/A"}</p>
-                      <p><strong>Time:</strong> {r.lecture_time || "N/A"}</p>
-                      <p><strong>Venue</strong> {r.venue || "N/A"}</p>
-                      <p><strong>Students Present:</strong> {r.students_present || "N/A"}</p>
-                      <p><strong>Total Students:</strong> {r.total_students || "N/A"}</p>
-                      <p><strong>Learning Outcomes:</strong> {r.learning_outcomes || "N/A"}</p>
-                      <p><strong>Recommendations:</strong> {r.recommendations || "N/A"}</p>
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </React.Fragment>
-          ))}
-        </tbody>
-      </table>
+          {/* Lecturer Reports Table */}
+          {expandedLecturer === lecturer && (
+            <div className="table-responsive mt-3">
+              <table className="table table-bordered table-hover align-middle mb-0">
+                <thead className="table-light">
+                  <tr>
+                    <th>#</th>
+                    <th>Class</th>
+                    <th>Date</th>
+                    <th>Feedback</th>
+                    <th>Details</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {lecturerReports.map((r, i) => (
+                    <React.Fragment key={r.report_id || i}>
+                      <tr>
+                        <td>{i + 1}</td>
+                        <td>{r.class_name}</td>
+                        <td>{r.date_of_lecture || "N/A"}</td>
+                        <td style={{ minWidth: 220 }}>
+                          <input
+                            type="text"
+                            value={r.prl_feedback || ""}
+                            onChange={(e) =>
+                              handleFeedbackChange(r.report_id, e.target.value)
+                            }
+                            onBlur={() =>
+                              handleFeedbackSave(r.report_id, r.prl_feedback)
+                            }
+                            className="form-control form-control-sm"
+                          />
+                        </td>
+                        <td>
+                          <button
+                            className="btn btn-sm btn-outline-dark"
+                            type="button"
+                            onClick={() =>
+                              setExpandedReport(
+                                expandedReport === r.report_id
+                                  ? null
+                                  : r.report_id
+                              )
+                            }
+                          >
+                            {expandedReport === r.report_id
+                              ? "Hide"
+                              : "View More"}
+                          </button>
+                        </td>
+                      </tr>
+
+                      {/* Report Extra Details */}
+                      {expandedReport === r.report_id && (
+                        <tr>
+                          <td colSpan={5}>
+                            <div className="p-3 border rounded bg-light">
+                              <p>
+                                <strong>Topic:</strong> {r.topic || "N/A"}
+                              </p>
+                              <p>
+                                <strong>Time:</strong> {r.lecture_time || "N/A"}
+                              </p>
+                              <p>
+                                <strong>Venue:</strong> {r.venue || "N/A"}
+                              </p>
+                              <p>
+                                <strong>Students Present:</strong>{" "}
+                                {r.students_present || "N/A"}
+                              </p>
+                              <p>
+                                <strong>Total Students:</strong>{" "}
+                                {r.total_students || "N/A"}
+                              </p>
+                              <p>
+                                <strong>Learning Outcomes:</strong>{" "}
+                                {r.learning_outcomes || "N/A"}
+                              </p>
+                              <p>
+                                <strong>Recommendations:</strong>{" "}
+                                {r.recommendations || "N/A"}
+                              </p>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   </div>
 )}
-
-
-
-
 
                   {/* -------- MONITORING TAB (keeps chart but expands area) -------- */}
                   {activeTab === "monitoring" && (
@@ -860,8 +992,7 @@ function PRLDashboard() {
                       </div>
                     </div>
                   )}
-
-                  
+     
 
 {activeTab === "classes" && (
   <div>
@@ -890,8 +1021,8 @@ function PRLDashboard() {
       </div>
     </div>
 
-    <div className="table-responsive card p-3" style={{ background: cardBg }}>
-      <table className="table table-striped align-middle mb-0">
+    <div className="table-responsive card p-3 mb-4" style={{ background: "" }}>
+      <table className="table table-bordered table-hover align-middle mb-0">
         <thead className="table-light">
           <tr>
             <th>#</th>
@@ -917,61 +1048,124 @@ function PRLDashboard() {
   </div>
 )}
 
-                  {activeTab === "ratings" && (
-  <div>
-    <div className="mb-3 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
-      <h4 className="mb-2 mb-md-0">Ratings</h4>
-
-      <div className="d-flex w-100 w-md-auto gap-2 flex-column flex-md-row">
+  {/* ----------------- Ratings Tab ----------------- */}
+  {activeTab === "ratings" && (
+    <div>
+      <div className="mb-3 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+        <h4 className="mb-0">Ratings</h4>
         <input
           type="text"
-          placeholder="Search Ratings..."
-          className="form-control w-100 w-md-25"
+          placeholder="Search Lecturers..."
+          className="form-control"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
+          style={{ minWidth: 220 }}
         />
         <button
           className="btn btn-outline-primary d-flex align-items-center justify-content-center"
-          onClick={() =>
-            exportToCSV(
-              filterData(ratings, ["lecturer_name", "student_name", "rating", "comment", "created_at"]),
-              "ratings.csv"
-            )
-          }
+          onClick={() => exportToCSV(filterData(ratings, []), "ratings.csv")}
         >
           <FaDownload className="me-1" /> CSV
         </button>
       </div>
-    </div>
-
-    <div className="table-responsive card p-3" style={{ background: cardBg }}>
-      <table className="table table-striped align-middle mb-0">
-        <thead className="table-light">
-          <tr>
-            <th>Lecturer</th>
-            <th>Student</th>
-            <th>Rating</th>
-            <th>Comment</th>
-            <th>Date</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filterData(ratings, ["lecturer_name", "student_name"]).map((r, i) => (
-            <tr key={r.rating_id || i}>
-              <td>{r.lecturer_name}</td>
-              <td>{r.student_name}</td>
-              <td>{r.rating}</td>
-              <td>{r.comment || "No comment"}</td>
-              <td>{r.created_at || r.date || "N/A"}</td>
-            </tr>
-          ))}        
-          
-               </tbody>
-              </table>
+  
+      {/* Grouped Lecturers */}
+      <div className="row g-3">
+        {Object.entries(
+          ratings.reduce((acc, r) => {
+            if (!acc[r.lecturer_name]) acc[r.lecturer_name] = [];
+            acc[r.lecturer_name].push(r);
+            return acc;
+          }, {})
+        )
+          .filter(([name]) =>
+            name.toLowerCase().includes(searchQuery.toLowerCase())
+          )
+          .map(([lecturer, lecturerRatings], i) => (
+            <div key={i} className="col-12 col-md-6 col-lg-4">
+              <div
+                className="card shadow-sm border-0 rounded-4 p-3 h-100"
+                style={{ cursor: "pointer", transition: "0.3s" }}
+                onClick={() => setSelectedLecturer(lecturer)}
+              >
+                <div className="d-flex align-items-center justify-content-between">
+                  <h5 className="mb-0">{lecturer}</h5>
+                  <span className="badge bg-primary">{lecturerRatings.length} Ratings</span>
+                </div>
+                <div className="mt-2 text-muted small">
+                  Avg Rating:{" "}
+                  <strong>
+                    {(
+                      lecturerRatings.reduce((sum, r) => sum + r.rating, 0) /
+                      lecturerRatings.length
+                    ).toFixed(1)}
+                  </strong>
+                </div>
+              </div>
+            </div>
+          ))}
+  
+        {ratings.length === 0 && (
+          <div className="text-center text-muted mt-3">No ratings found</div>
+        )}
+      </div>
+  
+      {/* Lecturer Detail Modal */}
+      {selectedLecturer && (
+        <div
+          className="modal fade show d-block"
+          style={{ background: "rgba(0,0,0,0.6)" }}
+          onClick={() => setSelectedLecturer(null)}
+        >
+          <div
+            className="modal-dialog modal-lg modal-dialog-centered"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-content rounded-4 border-0 shadow">
+              <div className="modal-header border-0">
+                <h5 className="modal-title">
+                  Ratings for {selectedLecturer}
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setSelectedLecturer(null)}
+                ></button>
+              </div>
+              <div className="modal-body">
+                <div className="table-responsive">
+                  <table className="table table-bordered table-hover align-middle">
+                    <thead className="table-light">
+                      <tr>
+                        <th>Student</th>
+                        <th>Rating</th>
+                        <th>Comment</th>
+                        <th>Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {ratings
+                        .filter((r) => r.lecturer_name === selectedLecturer)
+                        .map((r, j) => (
+                          <tr key={j}>
+                            <td>{r.student_name}</td>
+                            <td>{r.rating}</td>
+                            <td>{r.comment || "No comment"}</td>
+                            <td>{r.created_at || r.date || "N/A"}</td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           </div>
-        )}
-      </motion.div>
+        </div>
+      )}
+    </div>
+  )}    
+  
+   </motion.div>
     </AnimatePresence>
     )}
   </section>

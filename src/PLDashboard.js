@@ -1,9 +1,19 @@
 // PLDashboard.js
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import axios from "axios";
 import Dashboard from "./Dashboard";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { Bar } from "react-chartjs-2";
 import ProfilePicture from "./ProfilePicture";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
 import {
   FaChalkboardTeacher,
   FaClipboardList,
@@ -12,6 +22,9 @@ import {
   FaSignOutAlt,
   FaBell,
   FaBars,
+  FaSun,
+  FaMoon,
+  FaDownload,
   FaUserTie,
   FaEdit,
   FaTrash,
@@ -20,8 +33,15 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
-
+/* ---------- Small helpers ---------- */
+const formatGreeting = (date) => {
+  const hour = date.getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 18) return "Good afternoon";
+  return "Good evening";
+};
 
 const ShimmerLoader = () => (
   <div className="w-100">
@@ -30,8 +50,8 @@ const ShimmerLoader = () => (
         <div key={i} className="col-md-4">
           <div className="card p-4 rounded-4 border-0">
             <div className="placeholder-glow">
-              <div className="placeholder col-8 mb-3" />
-              <div className="placeholder col-6" />
+              <div className="placeholder col-8 mb-3"></div>
+              <div className="placeholder col-6"></div>
             </div>
           </div>
         </div>
@@ -39,6 +59,24 @@ const ShimmerLoader = () => (
     </div>
   </div>
 );
+
+
+
+// ---------- CSV Export ----------
+const exportToCSV = (data, filename) => {
+  if (!data.length) return;
+  const headers = Object.keys(data[0]);
+  const rows = data.map((row) => headers.map((h) => `"${row[h] ?? ""}"`).join(","));
+  const csvContent = [headers.join(","), ...rows].join("\n");
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.setAttribute("download", filename);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
 
 function SimpleModal({ title, show, onClose, children, footer }) {
   
@@ -83,22 +121,21 @@ function SimpleModal({ title, show, onClose, children, footer }) {
 
 function PLDashboard() {
   const navigate = useNavigate();
-
-
   const [activeTab, setActiveTab] = useState("dashboard");
   const [collapsed, setCollapsed] = useState(false);
   const [loadingTab, setLoadingTab] = useState(false);
   const [expandedRow, setExpandedRow] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [expandedLecturer, setExpandedLecturer] = useState(null);
+  const [expandedReport, setExpandedReport] = useState(null);
 
- 
   const [courses, setCourses] = useState([]);
   const [lecturers, setLecturers] = useState([]);
   const [assignments, setAssignments] = useState([]);
   const [reports, setReports] = useState([]);
   const [classes, setClasses] = useState([]);
   const [ratings, setRatings] = useState([]);
-
+  const [time, setTime] = useState(new Date());
 
   const token = localStorage.getItem("token");
   const name = localStorage.getItem("name");
@@ -110,13 +147,33 @@ function PLDashboard() {
   const [courseToEdit, setCourseToEdit] = useState(null);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState(null); // {type: 'course'|'assignment', id}
+  const [deleteTarget, setDeleteTarget] = useState(null); 
+  const [selectedLecturer, setSelectedLecturer] = useState(null);
 
-  
   const [addCourseForm, setAddCourseForm] = useState({ course_name: "", course_code: "" });
   const [editCourseForm, setEditCourseForm] = useState({ course_name: "", course_code: "" });
   const [assignForm, setAssignForm] = useState({ course_id: "", lecturer_id: "" });
+  const [darkMode, setDarkMode] = useState(() => {
+      try {
+        return JSON.parse(localStorage.getItem("prl_darkMode")) || false;
+      } catch {
+        return false;
+      }
+    });
+  
 
+   /* ---------- Live clock ---------- */
+    useEffect(() => {
+      const timer = setInterval(() => setTime(new Date()), 1000);
+      return () => clearInterval(timer);
+    }, []);
+
+  /* ---------- Persist dark mode ---------- */
+    useEffect(() => {
+      try {
+        localStorage.setItem("prl_darkMode", JSON.stringify(darkMode));
+      } catch {}
+    }, [darkMode]);
   
   useEffect(() => {
     if (!token) return;
@@ -147,6 +204,44 @@ function PLDashboard() {
     fetchAll();
   }, [token]);
 
+
+  /* ---------- Derived metrics ---------- */
+    const avgAttendance = useMemo(() => {
+      if (!reports.length) return 0;
+      const totalPct = reports.reduce((sum, r) => {
+        const pct = r.total_students ? (r.students_present || 0) / r.total_students : 0;
+        return sum + pct;
+      }, 0);
+      return Math.round((totalPct / reports.length) * 100);
+    }, [reports]);
+  
+    const feedbackCount = useMemo(() => reports.filter((r) => r.prl_feedback).length, [reports]);
+  
+    const monitoringData = useMemo(() => ({
+      labels: reports.map((r) => r.class_name || `Class ${r.class_id || "-"}`),
+      datasets: [
+        {
+          label: "Student Attendance %",
+          data: reports.map((r) =>
+            r.total_students ? Math.round((r.students_present / r.total_students) * 100 * 100) / 100 : 0
+          ),
+          backgroundColor: darkMode ? "rgba(255,206,86,0.6)" : "rgba(75,192,192,0.6)",
+        },
+      ],
+    }), [reports, darkMode]);
+  
+    const topLecturers = useMemo(() => {
+      return lecturers
+        .map((l) => {
+          const related = ratings.filter((r) => r.lecturer_id === l.lecturer_id);
+          const avg = related.length ? related.reduce((s, x) => s + (x.rating || 0), 0) / related.length : 0;
+          return { ...l, avgRating: Number(avg.toFixed(2)) };
+        })
+        .sort((a, b) => b.avgRating - a.avgRating)
+        .slice(0, 3);
+    }, [lecturers, ratings]);
+  
+
   
 
   
@@ -176,13 +271,10 @@ function PLDashboard() {
     }, 250);
   };
 
-  
   const handleLogout = () => {
     localStorage.clear();
      window.location.href = "/";
   };
-
- 
 
   const openAddCourse = () => {
     setAddCourseForm({ course_name: "", course_code: "" });
@@ -245,8 +337,6 @@ function PLDashboard() {
     }
   };
 
- 
-
   const openAssignModal = () => {
     setAssignForm({ course_id: "", lecturer_id: "" });
     setShowAssignModal(true);
@@ -264,7 +354,6 @@ function PLDashboard() {
     }
   };
 
-  
 
   return (
     <Dashboard title="Program Leader Dashboard">
@@ -273,15 +362,15 @@ function PLDashboard() {
         <aside
           className="bg-white shadow-sm p-3 d-flex flex-column"
           style={{
-            width: collapsed ? 84 : 260,
-            transition: "width 0.25s ease",
+            width: collapsed ? 80 : 260,
+            transition: "width 0.22s ease",
             position: "sticky",
             top: 0,
             height: "100vh",
             borderTopRightRadius: 20,
             borderBottomRightRadius: 20,
             zIndex: 20,
-            overflow: "hidden",
+            overflow: "auto",
           }}
         >
           <div className="d-flex align-items-center justify-content-between mb-3">
@@ -302,6 +391,7 @@ function PLDashboard() {
             {[
               { key: "dashboard", icon: <FaChartLine />, label: "Dashboard" },
               { key: "courses", icon: <FaChalkboardTeacher />, label: "Courses" },
+              { key: "lecturers", icon: <FaUserTie />, label: "Lecturers" },
               { key: "assignments", icon: <FaClipboardList />, label: "Assign Courses" },
               { key: "reports", icon: <FaClipboardList />, label: "Reports" },
               { key: "classes", icon: <FaChalkboardTeacher />, label: "Classes" },
@@ -322,6 +412,17 @@ function PLDashboard() {
           </nav>
 
           <div className="mt-auto pt-4">
+
+          <button
+          onClick={() => setDarkMode((s) => !s)}
+          className="btn btn-outline-secondary w-100 rounded-3 d-flex align-items-center justify-content-center"
+          >
+          {darkMode ? <FaSun className="me-2 text-warning" /> : <FaMoon className="me-2" />}
+          {!collapsed && (darkMode ? "Light Mode" : "Dark Mode")}
+          </button>
+          
+
+          
             <button
               onClick={handleLogout}
               className="btn btn-outline-danger w-100 rounded-3 d-flex align-items-center justify-content-center"
@@ -340,14 +441,22 @@ function PLDashboard() {
             style={{
               position: "sticky",
               top: 0,
-              zIndex: 100,
+              zIndex: 55,
               borderBottomLeftRadius: 20,
               borderBottomRightRadius: 20,
             }}
           >
-            <h5 className="fw-bold text-primary mb-0">
-              {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
-            </h5>
+            <div className="d-flex align-items-center gap-3">
+              <div>
+                <div className="small text-uppercase fw-semibold" style={{ letterSpacing: 0.6 }}>
+                  {formatGreeting(time)}, <span className="fw-bold">{name.split(" ")[0] || name}</span>
+                </div>
+                <div className={`fw-semibold `} style={{ fontSize: 12 }}>
+                  {time.toLocaleDateString()} • {time.toLocaleTimeString()}
+                </div>
+              </div>
+            </div>
+
             <div className="d-flex align-items-center gap-3">
               <button className="btn btn-light rounded-circle shadow-sm" aria-label="Notifications">
                 <FaBell className="text-primary" />
@@ -364,74 +473,178 @@ function PLDashboard() {
             </div>
           </header>
 
-          {/* Content Area */}
-          <div className="flex-grow-1 p-4 overflow-auto">
-            {loadingTab ? (
-              <ShimmerLoader />
-            ) : (
-              <AnimatePresence mode="wait">
-                <motion.div key={activeTab} variants={tabVariants} initial="hidden" animate="visible" exit="exit">
-                  {/* Dashboard cards */}
-                  {activeTab === "dashboard" && (
-                    <div className="row g-4 mb-4">
-                      {[
-                        {
-                          label: "Total Courses",
-                          value: courses.length,
-                          tab: "courses",
-                          icon: <FaChalkboardTeacher size={28} className="text-primary" />,
-                        },
-                        {
-                          label: "Total Reports",
-                          value: reports.length,
-                          tab: "reports",
-                          icon: <FaClipboardList size={28} className="text-success" />,
-                        },
-                        {
-                          label: "Total Ratings",
-                          value: ratings.length,
-                          tab: "ratings",
-                          icon: <FaStar size={28} className="text-warning" />,
-                        },
-                        {
-                          label: "Total Assignments",
-                          value: assignments.length,
-                          tab: "assignments",
-                          icon: <FaClipboardList size={28} className="text-info" />,
-                        },
-                        {
-                          label: "Total Classes",
-                          value: classes.length,
-                          tab: "classes",
-                          icon: <FaChalkboardTeacher size={28} className="text-danger" />,
-                        },
-                        {
-                          label: "Total Lecturers",
-                          value: lecturers.length,
-                          tab: "lecturers",
-                          icon: <FaUserTie size={28} className="text-secondary" />,
-                        },
-                      ].map((card, i) => (
-                        <div key={i} className="col-12 col-md-6 col-lg-4">
-                          <div
-                            className="card p-3 shadow-sm rounded-4 border-0"
-                            style={{ cursor: "pointer" }}
-                            onClick={() => handleTabChange(card.tab)}
-                          >
-                            <div className="d-flex align-items-center">
-                              <div className="me-3" style={{ fontSize: 28 }}>
-                                {card.icon}
-                              </div>
-                              <div>
-                                <h6 className="mb-0 text-muted">{card.label}</h6>
-                                <h4 className="mb-0">{card.value}</h4>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
+{/* Content Area */}
+<div className="flex-grow-1 p-4 overflow-auto">
+  {loadingTab ? (
+    <ShimmerLoader />
+  ) : (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={activeTab}
+        variants={tabVariants}
+        initial="hidden"
+        animate="visible"
+        exit="exit"
+      >
+        {/* Dashboard Cards */}
+        {activeTab === "dashboard" && (
+          <div className="container-fluid">
+            <div className="row g-4 mb-4">
+              {[
+                {
+                  label: "Total Courses",
+                  value: courses.length,
+                  tab: "courses",
+                  icon: (
+                    <FaChalkboardTeacher size={28} className="text-primary" />
+                  ),
+                },
+                {
+                  label: "Total Reports",
+                  value: reports.length,
+                  tab: "reports",
+                  icon: <FaClipboardList size={28} className="text-success" />,
+                },
+                {
+                  label: "Total Ratings",
+                  value: ratings.length,
+                  tab: "ratings",
+                  icon: <FaStar size={28} className="text-warning" />,
+                },
+                {
+                  label: "Total Assignments",
+                  value: assignments.length,
+                  tab: "assignments",
+                  icon: <FaClipboardList size={28} className="text-info" />,
+                },
+                {
+                  label: "Total Classes",
+                  value: classes.length,
+                  tab: "classes",
+                  icon: <FaChalkboardTeacher size={28} className="text-danger" />,
+                },
+                {
+                  label: "Total Lecturers",
+                  value: lecturers.length,
+                  tab: "lecturers",
+                  icon: <FaUserTie size={28} className="text-secondary" />,
+                },
+              ].map((card, i) => (
+                <div key={i} className="col-12 col-sm-6 col-md-4 col-lg-3">
+                  <div
+                    className="card p-3 shadow-sm rounded-4 border-0 h-100"
+                    style={{ cursor: "pointer" }}
+                    onClick={() => handleTabChange(card.tab)}
+                  >
+                    <div className="d-flex align-items-center">
+                      <div className="me-3" style={{ fontSize: 28 }}>
+                        {card.icon}
+                      </div>
+                      <div>
+                        <h6 className="mb-0 text-muted">{card.label}</h6>
+                        <h4 className="mb-0">{card.value}</h4>
+                      </div>
                     </div>
-                  )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Monitoring Overview */}
+            <div className="row g-4">
+              <div className="col-12 col-lg-8">
+                <div
+                  className="card p-3 shadow-sm rounded-4 h-100"
+                  style={{
+                    background: darkMode ? "#0b1220" : "#ffffff",
+                    transition: "background 0.3s ease",
+                  }}
+                >
+                  {/* Header */}
+                  <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between mb-3">
+                    <h5 className="mb-2 mb-md-0">Monitoring Overview</h5>
+                    <div className="small text-muted">{reports.length} classes</div>
+                  </div>
+
+                  {/* Chart */}
+                  <div
+                    style={{
+                      height: "360px",
+                      width: "100%",
+                      overflowX: "auto",
+                      paddingBottom: "0.5rem",
+                    }}
+                  >
+                    <Bar
+                      data={monitoringData}
+                      options={{
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                          legend: { display: true, position: "bottom" },
+                        },
+                      }}
+                    />
+                  </div>
+
+                  {/* Stats Summary */}
+                  <div className="row g-3 mt-3">
+                    <div className="col-12 col-sm-6 col-md-4">
+                      <div
+                        className="p-3 border rounded text-center h-100"
+                        style={{
+                          background: darkMode ? "#0b1220" : "#f8f9fb",
+                          transition: "background 0.3s ease",
+                        }}
+                      >
+                        <div className="small text-muted">Average Attendance</div>
+                        <div className="fw-bold fs-4">{avgAttendance}%</div>
+                      </div>
+                    </div>
+
+                    <div className="col-12 col-sm-6 col-md-4">
+                      <div
+                        className="p-3 border rounded text-center h-100"
+                        style={{
+                          background: darkMode ? "#0b1220" : "#f8f9fb",
+                          transition: "background 0.3s ease",
+                        }}
+                      >
+                        <div className="small text-muted">Total Classes</div>
+                        <div className="fw-bold fs-4">{classes.length}</div>
+                      </div>
+                    </div>
+
+                    <div className="col-12 col-md-4">
+                      <div
+                        className="p-3 border rounded text-center h-100"
+                        style={{
+                          background: darkMode ? "#0b1220" : "#f8f9fb",
+                          transition: "background 0.3s ease",
+                        }}
+                      >
+                        <div className="small text-muted">Total Ratings</div>
+                        <div className="fw-bold fs-4">{ratings.length}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+     
+                        
+                      
+
+                        
+
+                            
+
+                           
+                         
+                          
+                
 
                   {/* ----------------- Courses Tab ----------------- */}
                   {activeTab === "courses" && (
@@ -450,11 +663,18 @@ function PLDashboard() {
                           <button className="btn btn-primary" onClick={openAddCourse}>
                             <FaPlus className="me-2" /> Add
                           </button>
+
+                          <button
+                          className="btn btn-outline-primary d-flex align-items-center justify-content-center"
+                          onClick={() => exportToCSV(filterData(courses, []), "courses.csv")}
+                          >
+                          <FaDownload className="me-1" /> CSV
+                          </button>
                         </div>
                       </div>
 
-                      <div className="table-responsive">
-                        <table className="table table-striped align-middle">
+                       <div className="table-responsive card p-3" style={{ background:"" }}>
+                       <table className="table table-bordered table-hover align-middle mb-0">
                           <thead className="table-light">
                             <tr>
                               <th>#</th>
@@ -507,11 +727,17 @@ function PLDashboard() {
                             style={{ minWidth: 220 }}
                           />
                           <button className="btn btn-success" onClick={openAssignModal}><FaPlus className="me-2" />Assign</button>
+                          <button
+                          className="btn btn-outline-primary d-flex align-items-center justify-content-center"
+                          onClick={() => exportToCSV(filterData(assignments, [""]), "assign.csv")}
+                          >
+                         <FaDownload className="me-1" /> CSV
+                         </button>
                         </div>
                       </div>
 
-                      <div className="table-responsive">
-                        <table className="table table-striped align-middle">
+                       <div className="table-responsive card p-3" style={{ background:"" }}>
+                         <table className="table table-bordered table-hover align-middle mb-0">
                           <thead className="table-light">
                             <tr>
                               <th>#</th>
@@ -548,188 +774,469 @@ function PLDashboard() {
                     </div>
                   )}
 
-                  {/* ----------------- Reports Tab ----------------- */}
-                  {activeTab === "reports" && (
-                    <div>
-                      <div className="mb-3 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
-                        <h4 className="mb-0">Reports</h4>
-                        <input
-                          type="text"
-                          placeholder="Search Reports..."
-                          className="form-control"
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          style={{ minWidth: 220 }}
-                        />
-                      </div>
 
-                      <div className="table-responsive">
-                        <table className="table table-bordered align-middle">
-                          <thead className="table-light">
-                            <tr>
-                              <th>#</th>
-                              <th>Course</th>
-                              <th>Class</th>
-                              <th>Lecturer</th>
-                              <th>Topic</th>
-                              <th>Date</th>
-                              <th>Week</th>
-                              <th>PRL Feedback</th>
-                              <th>Details</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {filterData(reports, ["course_name", "class_name", "lecturer_name", "topic"]).map((r, i) => (
-                              <React.Fragment key={r.report_id || i}>
-                                <tr>
-                                  <td style={{ width: 60 }}>{i + 1}</td>
-                                  <td>{r.course_name}</td>
-                                  <td>{r.class_name}</td>
-                                  <td>{r.lecturer_name}</td>
-                                  <td>{r.topic}</td>
-                                  <td>{r.date_of_lecture || "N/A"}</td>
-                                  <td>{r.week_of_reporting || "N/A"}</td>
-                                  <td>{r.prl_feedback || "Pending"}</td>
-                                  <td>
-                                    <button
-                                      className="btn btn-sm btn-outline-dark"
-                                      type="button"
-                                      onClick={() => setExpandedRow(expandedRow === r.report_id ? null : r.report_id)}
-                                    >
-                                      {expandedRow === r.report_id ? "Hide" : "Show"}
-                                    </button>
-                                  </td>
-                                </tr>
-                                {expandedRow === r.report_id && (
-                                  <tr>
-                                    <td colSpan={9}>
-                                      <div className="p-3 border rounded bg-light">
-                                        <p><strong>Students Present:</strong> {r.students_present || "N/A"}</p>
-                                        <p><strong>Total Students:</strong> {r.total_students || "N/A"}</p>
-                                        <p><strong>Venue:</strong> {r.venue || "N/A"}</p>
-                                        <p><strong>Lecture Time:</strong> {r.lecture_time || "N/A"}</p>
-                                        <p><strong>Learning Outcomes:</strong> {r.learning_outcomes || "N/A"}</p>
-                                        <p><strong>Recommendations:</strong> {r.recommendations || "N/A"}</p>
-                                      </div>
-                                    </td>
-                                  </tr>
-                                )}
-                              </React.Fragment>
+{/* -------- LECTURERS TAB -------- */}
+{activeTab === "lecturers" && (
+  <div>
+    {/* Header */}
+    <div className="mb-3 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+      <h4 className="mb-2 mb-md-0">Lecturers</h4>
+      <div className="d-flex w-100 w-md-auto gap-2 flex-column flex-md-row">
+        <input
+          type="text"
+          placeholder="Search Lecturers..."
+          className="form-control w-100 w-md-25"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        <button
+          className="btn btn-outline-primary d-flex align-items-center justify-content-center"
+          onClick={() => {
+            const exportData = filterData(lecturers, ["lecturer_name", "email", "faculty_name"]).map((l) => ({
+              Name: l.lecturer_name || l.name || l.full_name || "N/A",
+              Email: l.email || "",
+              Faculty: l.faculty_name || "",
+            }));
+            exportToCSV(exportData, "lecturers.csv");
+          }}
+        >
+          <FaDownload className="me-1" /> CSV
+        </button>
+      </div>
+    </div>
+
+    {/* Table */}
+    <div className="table-responsive card p-3" style={{ background: "" }}>
+      <table className="table table-bordered table-hover align-middle mb-0">
+        <thead className="table-light">
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Faculty</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filterData(lecturers, ["lecturer_name", "email", "faculty_name"]).map((l, i) => {
+            const lecturerName = l.lecturer_name || l.name || l.full_name || "N/A";
+            const lecturerReports = reports.filter(r => r.lecturer_name === lecturerName);
+            const lecturerRatings = ratings.filter(rt => rt.lecturer_name === lecturerName);
+            const isExpanded = expandedRow === l.lecturer_id;
+
+            return (
+              <React.Fragment key={l.lecturer_id || i}>
+                <tr>
+                  <td>{i + 1}</td>
+                  <td>{lecturerName}</td>
+                  <td>{l.email || "N/A"}</td>
+                  <td>{l.faculty_name || "N/A"}</td>
+                  <td>
+                    <button
+                      className="btn btn-sm btn-outline-dark"
+                      onClick={() => setExpandedRow(isExpanded ? null : l.lecturer_id)}
+                    >
+                      {isExpanded ? "Hide" : "View More"}
+                    </button>
+                  </td>
+                </tr>
+
+                {isExpanded && (
+                  <tr>
+                    <td colSpan={5}>
+                      <div className="p-3 border rounded bg-light">
+                        {/* Lecturer Reports */}
+                        <h6 className="fw-bold mb-2">Reports</h6>
+                        {lecturerReports.length > 0 ? (
+                          <ul className="list-unstyled mb-3">
+                            {lecturerReports.map((rep, idx) => (
+                              <li key={idx} className="mb-2">
+                                <strong>{rep.class_name}</strong> — {rep.topic || "No topic"}  
+                                <span className="text-muted"> ({rep.date_of_lecture || "N/A"})</span>
+                              </li>
                             ))}
-                            {filterData(reports, ["course_name", "class_name", "lecturer_name", "topic"]).length === 0 && (
-                              <tr>
-                                <td colSpan={9} className="text-center text-muted">No reports found</td>
-                              </tr>
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  )}
+                          </ul>
+                        ) : (
+                          <p className="text-muted mb-3">No reports available</p>
+                        )}
 
-                  {/* ----------------- Classes Tab ----------------- */}
-                  {activeTab === "classes" && (
-                    <div>
-                      <div className="mb-3 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
-                        <h4 className="mb-0">Classes</h4>
-                        <input
-                          type="text"
-                          placeholder="Search Classes..."
-                          className="form-control"
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          style={{ minWidth: 220 }}
-                        />
-                      </div>
-
-                      <div className="table-responsive">
-                        <table className="table table-striped align-middle">
-                          <thead className="table-light">
-                            <tr>
-                              <th>#</th>
-                              <th>Name</th>
-                              <th>Year</th>
-                              <th>Faculty</th>
-                              <th>Description</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {filterData(classes, ["class_name", "faculty_name"]).map((c, i) => (
-                              <tr key={c.class_id || i}>
-                                <td style={{ width: 60 }}>{i + 1}</td>
-                                <td>{c.class_name}</td>
-                                <td>{c.year_of_study || "N/A"}</td>
-                                <td>{c.faculty_name}</td>
-                                <td>{c.description || "-"}</td>
-                              </tr>
+                        {/* Lecturer Ratings */}
+                        <h6 className="fw-bold mb-2">Ratings</h6>
+                        {lecturerRatings.length > 0 ? (
+                          <ul className="list-unstyled">
+                            {lecturerRatings.map((rt, idx) => (
+                              <li key={idx} className="mb-1">
+                                ⭐ {rt.rating} — <em>{rt.comment || "No comment"}</em>
+                              </li>
                             ))}
-                            {filterData(classes, ["class_name", "faculty_name"]).length === 0 && (
-                              <tr>
-                                <td colSpan={5} className="text-center text-muted">No classes found</td>
-                              </tr>
-                            )}
-                          </tbody>
-                        </table>
+                          </ul>
+                        ) : (
+                          <p className="text-muted">No ratings available</p>
+                        )}
                       </div>
-                    </div>
-                  )}
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
+            );
+          })}
 
-                  {/* ----------------- Ratings Tab ----------------- */}
-                  {activeTab === "ratings" && (
-                    <div>
-                      <div className="mb-3 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
-                        <h4 className="mb-0">Ratings</h4>
-                        <input
-                          type="text"
-                          placeholder="Search Ratings..."
-                          className="form-control"
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          style={{ minWidth: 220 }}
-                        />
-                      </div>
+          {!filterData(lecturers, ["lecturer_name", "email", "faculty_name"]).length && (
+            <tr>
+              <td colSpan={5} className="text-muted text-center">
+                No lecturers found
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  </div>
+)}
 
-                      <div className="table-responsive">
-                        <table className="table table-striped align-middle">
-                          <thead className="table-light">
-                            <tr>
-                              <th>Lecturer</th>
-                              <th>Student</th>
-                              <th>Rating</th>
-                              <th>Comment</th>
-                              <th>Date</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {filterData(ratings, ["lecturer_name", "student_name"]).map((r, i) => (
-                              <tr key={r.rating_id || i}>
-                                <td>{r.lecturer_name}</td>
-                                <td>{r.student_name}</td>
-                                <td>{r.rating}</td>
-                                <td>{r.comment || "No comment"}</td>
-                                <td>{r.created_at || r.date || "N/A"}</td>
-                              </tr>
-                            ))}
-                            {filterData(ratings, ["lecturer_name", "student_name"]).length === 0 && (
-                              <tr>
-                                <td colSpan={5} className="text-center text-muted">No ratings found</td>
-                              </tr>
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  )}
+
+
+{activeTab === "reports" && (
+  <div>
+    {/* Header + Search + Export */}
+    <div className="mb-3 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+      <h4 className="mb-2 mb-md-0">Lecturer Reports & PRL Feedback</h4>
+      <div className="d-flex w-100 w-md-auto gap-2 flex-column flex-md-row">
+        <input
+          type="text"
+          placeholder="Search Reports..."
+          className="form-control w-100 w-md-25"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        <button
+          className="btn btn-outline-primary d-flex align-items-center justify-content-center"
+          onClick={() =>
+            exportToCSV(
+              filterData(reports, [
+                "course_name",
+                "class_name",
+                "lecturer_name",
+                "topic",
+              ]),
+              "reports.csv"
+            )
+          }
+        >
+          <FaDownload className="me-1" /> CSV
+        </button>
+      </div>
+    </div>
+
+    {/* Grouped by Lecturer */}
+    <div className="card p-3 shadow-sm rounded-4" style={{ background: "" }}>
+      {Object.entries(
+        filterData(reports, [
+          "course_name",
+          "class_name",
+          "lecturer_name",
+          "topic",
+        ]).reduce((acc, r) => {
+          const lecturer = r.lecturer_name || "Unknown Lecturer";
+          if (!acc[lecturer]) acc[lecturer] = [];
+          acc[lecturer].push(r);
+          return acc;
+        }, {})
+      ).map(([lecturer, lecturerReports], index) => (
+        <div key={index} className="mb-4">
+          {/* Lecturer Header */}
+          <div
+            className="d-flex justify-content-between align-items-center p-3 border rounded bg-light"
+            style={{ cursor: "pointer" }}
+            onClick={() =>
+              setExpandedLecturer(expandedLecturer === lecturer ? null : lecturer)
+            }
+          >
+            <h5 className="mb-0">
+              <FaUserTie className="me-2 text-primary" />
+              {lecturer}
+            </h5>
+            <span className="badge bg-secondary">
+              {lecturerReports.length} Reports
+            </span>
+          </div>
+
+          {/* Lecturer Reports Table */}
+          {expandedLecturer === lecturer && (
+            <div className="table-responsive mt-3">
+              <table className="table table-bordered table-hover align-middle mb-0">
+                <thead className="table-light">
+                  <tr>
+                    <th>#</th>
+                    <th>Class</th>
+                    <th>Date</th>
+                    <th>Feedback</th>
+                    <th>Details</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {lecturerReports.map((r, i) => (
+                    <React.Fragment key={r.report_id || i}>
+                      <tr>
+                        <td>{i + 1}</td>
+                        <td>{r.class_name}</td>
+                        <td>{r.date_of_lecture || "N/A"}</td>
+                        <td>{r.prl_feedback || ""}</td>
+                        <td>
+                          <button
+                            className="btn btn-sm btn-outline-dark"
+                            type="button"
+                            onClick={() =>
+                              setExpandedReport(
+                                expandedReport === r.report_id
+                                  ? null
+                                  : r.report_id
+                              )
+                            }
+                          >
+                            {expandedReport === r.report_id
+                              ? "Hide"
+                              : "View More"}
+                          </button>
+                        </td>
+                      </tr>
+
+                      {/* Report Extra Details */}
+                      {expandedReport === r.report_id && (
+                        <tr>
+                          <td colSpan={5}>
+                            <div className="p-3 border rounded bg-light">
+                              <p>
+                                <strong>Topic:</strong> {r.topic || "N/A"}
+                              </p>
+                              <p>
+                                <strong>Time:</strong> {r.lecture_time || "N/A"}
+                              </p>
+                              <p>
+                                <strong>Venue:</strong> {r.venue || "N/A"}
+                              </p>
+                              <p>
+                                <strong>Students Present:</strong>{" "}
+                                {r.students_present || "N/A"}
+                              </p>
+                              <p>
+                                <strong>Total Students:</strong>{" "}
+                                {r.total_students || "N/A"}
+                              </p>
+                              <p>
+                                <strong>Learning Outcomes:</strong>{" "}
+                                {r.learning_outcomes || "N/A"}
+                              </p>
+                              <p>
+                                <strong>Recommendations:</strong>{" "}
+                                {r.recommendations || "N/A"}
+                              </p>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  </div>
+)}
+
+
+{/* ----------------- Classes Tab ----------------- */}
+{activeTab === "classes" && (
+  <div>
+    {/* Header + Search + CSV Export */}
+    <div className="mb-3 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+      <h4 className="mb-0">Classes</h4>
+      <div className="d-flex w-100 w-md-auto gap-2 flex-column flex-md-row">
+        <input
+          type="text"
+          placeholder="Search Classes..."
+          className="form-control w-100 w-md-25"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        <button
+          className="btn btn-outline-primary d-flex align-items-center justify-content-center"
+          onClick={() => {
+            const exportData = filterData(classes, ["class_name", "year_of_study", "faculty_name", "description"]).map(c => ({
+              "Name": c.class_name,
+              "Year": c.year_of_study || "N/A",
+              "Faculty": c.faculty_name || c.faculty?.name || "N/A",
+              "Description": c.description || "-"
+            }));
+            exportToCSV(exportData, "classes.csv");
+          }}
+        >
+          <FaDownload className="me-1" /> CSV
+        </button>
+      </div>
+    </div>
+
+    {/* Table */}
+    <div className="table-responsive card p-3 mb-4" style={{ background: "" }}>
+      <table className="table table-bordered table-hover align-middle mb-0">
+        <thead className="table-light">
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Year</th>
+            <th>Faculty</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filterData(classes, ["class_name", "faculty_name"]).map((c, i) => (
+            <tr key={c.class_id || i}>
+              <td style={{ width: 60 }}>{i + 1}</td>
+              <td>{c.class_name}</td>
+              <td>{c.year_of_study || "N/A"}</td>
+              <td>{c.faculty_name || c.faculty?.name || "N/A"}</td>
+              <td>{c.description || "-"}</td>
+            </tr>
+          ))}
+          {filterData(classes, ["class_name", "faculty_name"]).length === 0 && (
+            <tr>
+              <td colSpan={5} className="text-center text-muted">No classes found</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  </div>
+)}
+
+
+{/* ----------------- Ratings Tab ----------------- */}
+{activeTab === "ratings" && (
+  <div>
+    <div className="mb-3 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+      <h4 className="mb-0">Ratings</h4>
+      <input
+        type="text"
+        placeholder="Search Lecturers..."
+        className="form-control"
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        style={{ minWidth: 220 }}
+      />
+      <button
+        className="btn btn-outline-primary d-flex align-items-center justify-content-center"
+        onClick={() => exportToCSV(filterData(ratings, []), "ratings.csv")}
+      >
+        <FaDownload className="me-1" /> CSV
+      </button>
+    </div>
+
+    {/* Grouped Lecturers */}
+    <div className="row g-3">
+      {Object.entries(
+        ratings.reduce((acc, r) => {
+          if (!acc[r.lecturer_name]) acc[r.lecturer_name] = [];
+          acc[r.lecturer_name].push(r);
+          return acc;
+        }, {})
+      )
+        .filter(([name]) =>
+          name.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+        .map(([lecturer, lecturerRatings], i) => (
+          <div key={i} className="col-12 col-md-6 col-lg-4">
+            <div
+              className="card shadow-sm border-0 rounded-4 p-3 h-100"
+              style={{ cursor: "pointer", transition: "0.3s" }}
+              onClick={() => setSelectedLecturer(lecturer)}
+            >
+              <div className="d-flex align-items-center justify-content-between">
+                <h5 className="mb-0">{lecturer}</h5>
+                <span className="badge bg-primary">{lecturerRatings.length} Ratings</span>
+              </div>
+              <div className="mt-2 text-muted small">
+                Avg Rating:{" "}
+                <strong>
+                  {(
+                    lecturerRatings.reduce((sum, r) => sum + r.rating, 0) /
+                    lecturerRatings.length
+                  ).toFixed(1)}
+                </strong>
+              </div>
+            </div>
+          </div>
+        ))}
+
+      {ratings.length === 0 && (
+        <div className="text-center text-muted mt-3">No ratings found</div>
+      )}
+    </div>
+
+    {/* Lecturer Detail Modal */}
+    {selectedLecturer && (
+      <div
+        className="modal fade show d-block"
+        style={{ background: "rgba(0,0,0,0.6)" }}
+        onClick={() => setSelectedLecturer(null)}
+      >
+        <div
+          className="modal-dialog modal-lg modal-dialog-centered"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="modal-content rounded-4 border-0 shadow">
+            <div className="modal-header border-0">
+              <h5 className="modal-title">
+                Ratings for {selectedLecturer}
+              </h5>
+              <button
+                type="button"
+                className="btn-close"
+                onClick={() => setSelectedLecturer(null)}
+              ></button>
+            </div>
+            <div className="modal-body">
+              <div className="table-responsive">
+                <table className="table table-bordered table-hover align-middle">
+                  <thead className="table-light">
+                    <tr>
+                      <th>Student</th>
+                      <th>Rating</th>
+                      <th>Comment</th>
+                      <th>Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ratings
+                      .filter((r) => r.lecturer_name === selectedLecturer)
+                      .map((r, j) => (
+                        <tr key={j}>
+                          <td>{r.student_name}</td>
+                          <td>{r.rating}</td>
+                          <td>{r.comment || "No comment"}</td>
+                          <td>{r.created_at || r.date || "N/A"}</td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+  </div>
+)}
+       
                 </motion.div>
               </AnimatePresence>
             )}
           </div>
         </div>
 
-        {/* -------------------------
-            Modals (Add / Edit / Assign / Confirm Delete)
-           ------------------------- */}
-
+        
         {/* Add Course */}
         <SimpleModal
           title="Add Course"
@@ -737,7 +1244,8 @@ function PLDashboard() {
           onClose={() => setShowAddCourse(false)}
           footer={
             <>
-              <button className="btn btn-secondary" onClick={() => setShowAddCourse(false)}>Cancel</button>
+              <button className="btn btn-secondary" 
+              onClick={() => setShowAddCourse(false)}>Cancel</button>
               <button form="addCourseForm" type="submit" className="btn btn-primary">Save</button>
             </>
           }
@@ -745,11 +1253,17 @@ function PLDashboard() {
           <form id="addCourseForm" onSubmit={submitAddCourse}>
             <div className="mb-3">
               <label className="form-label">Course Name</label>
-              <input className="form-control" value={addCourseForm.course_name} onChange={(e) => setAddCourseForm({ ...addCourseForm, course_name: e.target.value })} required />
+              <input className="form-control" 
+              value={addCourseForm.course_name} 
+              onChange={(e) => 
+              setAddCourseForm({ ...addCourseForm, course_name: e.target.value })} required />
             </div>
             <div className="mb-3">
               <label className="form-label">Course Code</label>
-              <input className="form-control" value={addCourseForm.course_code} onChange={(e) => setAddCourseForm({ ...addCourseForm, course_code: e.target.value })} required />
+              <input className="form-control" 
+              value={addCourseForm.course_code} 
+              onChange={(e) => 
+              setAddCourseForm({ ...addCourseForm, course_code: e.target.value })} required />
             </div>
           </form>
         </SimpleModal>
@@ -761,7 +1275,8 @@ function PLDashboard() {
           onClose={() => { setShowEditCourse(false); setCourseToEdit(null); }}
           footer={
             <>
-              <button className="btn btn-secondary" onClick={() => { setShowEditCourse(false); setCourseToEdit(null); }}>Cancel</button>
+              <button className="btn btn-secondary" 
+              onClick={() => { setShowEditCourse(false); setCourseToEdit(null); }}>Cancel</button>
               <button form="editCourseForm" type="submit" className="btn btn-primary">Update</button>
             </>
           }
@@ -769,11 +1284,13 @@ function PLDashboard() {
           <form id="editCourseForm" onSubmit={submitEditCourse}>
             <div className="mb-3">
               <label className="form-label">Course Name</label>
-              <input className="form-control" value={editCourseForm.course_name} onChange={(e) => setEditCourseForm({ ...editCourseForm, course_name: e.target.value })} required />
+              <input className="form-control" value={editCourseForm.course_name} 
+              onChange={(e) => setEditCourseForm({ ...editCourseForm, course_name: e.target.value })} required />
             </div>
             <div className="mb-3">
               <label className="form-label">Course Code</label>
-              <input className="form-control" value={editCourseForm.course_code} onChange={(e) => setEditCourseForm({ ...editCourseForm, course_code: e.target.value })} required />
+              <input className="form-control" value={editCourseForm.course_code} 
+              onChange={(e) => setEditCourseForm({ ...editCourseForm, course_code: e.target.value })} required />
             </div>
           </form>
         </SimpleModal>
