@@ -564,10 +564,7 @@ function PLDashboard() {
                   {/* Chart */}
                   <div
                     style={{
-                      height: "360px",
-                      width: "100%",
-                      overflowX: "auto",
-                      paddingBottom: "0.5rem",
+                      height: "360px"
                     }}
                   >
                     <Bar
