@@ -373,7 +373,7 @@ function PRLDashboard() {
 
             <div className="d-flex align-items-center gap-3">
               <div className="d-none d-md-block text-end me-2">
-                <div className={`fw-semibold ${subtleText}`}>{email || ""}</div>
+              <div className={`fw-semibold ${subtleText}`}>{"WELCOME"}</div>
                 <div className="small">{faculty_id ? `Faculty: ${faculty_id}` : ""}</div>
               </div>
 

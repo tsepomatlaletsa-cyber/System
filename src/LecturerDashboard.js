@@ -81,9 +81,10 @@ function LecturerDashboard() {
   const [showReportForm, setShowReportForm] = useState(false);
   const [showForm, setShowForm] = useState(false);
 
-  const handleEditReport = (report) => {
-  // Open the form
-  setShowReportForm(true);
+  const handleEditClick = (report) => {
+  setEditingReport({ ...report }); // open modal pre-filled
+
+
 
   // Fill the form with existing report data
   setForm({
@@ -106,6 +107,54 @@ function LecturerDashboard() {
 };
 
 
+const handleUpdateReport = async () => {
+  try {
+    const token = localStorage.getItem("token");
+
+    const res = await axios.put(
+      `https://system-backend-2-ty55.onrender.com/reports/${editingReport.report_id}`,
+      {
+        week_of_reporting: editingReport.week_of_reporting,
+        date_of_lecture: editingReport.date_of_lecture,
+        course_name: editingReport.course_name,
+        course_code: editingReport.course_code,
+        students_present: editingReport.students_present,
+        total_students: editingReport.total_students,
+        venue: editingReport.venue,
+        lecture_time: editingReport.lecture_time,
+        topic: editingReport.topic,
+        learning_outcomes: editingReport.learning_outcomes,
+        recommendations: editingReport.recommendations,
+        class_name: editingReport.class_name,
+        class_id: editingReport.class_id,
+        faculty_id: editingReport.faculty_id,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    alert("✅ Report updated successfully!");
+
+    // ✅ Update table immediately without refetch
+    setReports((prev) =>
+      prev.map((r) =>
+        r.report_id === editingReport.report_id
+          ? { ...r, ...editingReport }
+          : r
+      )
+    );
+
+    setEditingReport(null);
+  } catch (err) {
+    console.error("❌ Failed to update report:", err);
+    alert("❌ Failed to update report.");
+  }
+};
+
 
   const [stats, setStats] = useState({ totalReports: 0, totalCourses: 0, totalRatings: 0 });
 
@@ -118,13 +167,13 @@ function LecturerDashboard() {
   const [time, setTime] = useState(new Date());
   const [darkMode, setDarkMode] = useState(() => {
       try {
-        return JSON.parse(localStorage.getItem("prl_darkMode")) || false;
+        return JSON.parse(localStorage.getItem("l_darkMode")) || false;
       } catch {
         return false;
       }
     });
 
-    /* --------------------------- Supporting JS --------------------------- */
+    
 
 const [sortConfig, setSortConfig] = useState({ key: "course_name", direction: "asc" });
 const [currentPage, setCurrentPage] = useState(1);
@@ -338,32 +387,22 @@ const paginatedCourses = sortedCourses.slice(
   };
 
 
-const handleDeleteReport = async (report_id) => {
-  if (!window.confirm("Are you sure you want to delete this report?")) return;
-  try {
-    await axios.delete(`https://system-backend-2-ty55.onrender.com/reports/${report_id}`, { headers });
-    setReports((prev) => prev.filter((r) => r.report_id !== report_id));
-    alert("✅ Report deleted successfully!");
-  } catch (err) {
-    console.error(err.response?.data || err.message);
-    alert("⚠️ Error deleting report: " + (err.response?.data?.error || err.message));
-  }
-};
-
-
   return (
     <Dashboard title="Lecturer Dashboard">
       <div className="d-flex" style={{ minHeight: "100vh", background: "linear-gradient(to right, #f4f7fb, #edf1ff)" }}>
         {/* Sidebar */}
         <aside
-          className="bg-white shadow-sm p-3 d-flex flex-column position-sticky top-0"
+           className={`shadow-sm p-3 d-flex flex-column ${darkMode ? "bg-dark" : "bg-white"}`}
           style={{
             width: collapsed ? 80 : 260,
-            transition: "width 0.25s ease",
+            transition: "width 0.22s ease",
+            position: "sticky",
+            top: 0,
+            height: "100vh",
             borderTopRightRadius: 20,
             borderBottomRightRadius: 20,
+            zIndex: 20,
             overflow: "auto",
-            height: "100vh",
           }}
         >
           <div className="d-flex align-items-center justify-content-between mb-3">
@@ -416,7 +455,7 @@ const handleDeleteReport = async (report_id) => {
                 <div className="flex-grow-1 d-flex flex-column">
                   {/* Top Navbar */}
                   <header
-                    className="bg-white shadow-sm px-4 py-3 d-flex align-items-center justify-content-between"
+                    className={`shadow-sm px-4 py-3 d-flex align-items-center justify-content-between ${darkMode ? "bg-secondary" : "bg-white"}`}
                     style={{
                       position: "sticky",
                       top: 0,
@@ -437,6 +476,7 @@ const handleDeleteReport = async (report_id) => {
                     </div>
         
                     <div className="d-flex align-items-center gap-3">
+                       <div className={`fw-semibold `}>{"WELCOME"}</div>
                       <button className="btn btn-light rounded-circle shadow-sm" aria-label="Notifications">
                         <FaBell className="text-primary" />
                       </button>
@@ -463,7 +503,7 @@ const handleDeleteReport = async (report_id) => {
  
 {/* Dashboard Cards + Monitoring Overview */}
 {activeTab === "stats" && (
-  <>
+  <div>
     {/* Dashboard Cards */}
     <div className="row g-4 mb-4">
       {[
@@ -491,71 +531,83 @@ const handleDeleteReport = async (report_id) => {
       ))}
     </div>
 
-    {/* Monitoring Overview */}
-    <div className="row g-4">
-      <div className="col-12 col-lg-8">
-        <div
-          className="card p-3 shadow-sm rounded-4 h-100"
-          style={{
-            background: darkMode ? "#0b1220" : "#ffffff",
-            transition: "background 0.3s ease",
+{/* Monitoring Overview */}
+<div className="row g-4">
+  <div className="col-12 col-xl-8">
+    <div
+      className="card p-3 shadow-sm rounded-4"
+      style={{
+        background: darkMode ? "#0b1220" : "#ffffff",
+        transition: "background 0.3s ease",
+      }}
+    >
+      {/* Header */}
+      <div className="d-flex align-items-center justify-content-between mb-3">
+        <h5 className="mb-0">Monitoring Overview</h5>
+        <div className="small text-muted">{reports.length} classes</div>
+      </div>
+
+      {/* Chart */}
+      <div style={{ height: 360 }}>
+        <Bar
+          data={monitoringData}
+          options={{
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: true, position: "bottom" },
+            },
           }}
-        >
-          {/* Header */}
-          <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between mb-3">
-            <h5 className="mb-2 mb-md-0">Monitoring Overview</h5>
-            <div className="small text-muted">{reports.length} classes</div>
+        />
+      </div>
+
+      {/* Stats Summary */}
+      <div className="row g-3 mt-3">
+        <div className="col-12 col-md-4">
+          <div
+            className="p-3 border rounded text-center"
+            style={{
+              background: darkMode ? "#0b1220" : "#f8f9fb",
+              transition: "background 0.3s ease",
+            }}
+          >
+            <div className="small text-muted">Average Attendance</div>
+            <div className="fw-bold fs-4">{avgAttendance}%</div>
           </div>
+        </div>
 
-          {/* Chart */}
-          <div style={{ height: "360px", width: "100%", overflowX: "auto", paddingBottom: "0.5rem" }}>
-            <Bar
-              data={monitoringData}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: true, position: "bottom" } },
-              }}
-            />
+        <div className="col-12 col-md-4">
+          <div
+            className="p-3 border rounded text-center"
+            style={{
+              background: darkMode ? "#0b1220" : "#f8f9fb",
+              transition: "background 0.3s ease",
+            }}
+          >
+            <div className="small text-muted">Reports Reviewed</div>
+            <div className="fw-bold fs-4">{feedbackCount}</div>
           </div>
+        </div>
 
-          {/* Stats Summary */}
-          <div className="row g-3 mt-3">
-            <div className="col-12 col-sm-6 col-md-4">
-              <div
-                className="p-3 border rounded text-center h-100"
-                style={{ background: darkMode ? "#0b1220" : "#f8f9fb", transition: "background 0.3s ease" }}
-              >
-                <div className="small text-muted">Average Attendance</div>
-                <div className="fw-bold fs-4">{avgAttendance}%</div>
-              </div>
-            </div>
-
-            <div className="col-12 col-sm-6 col-md-4">
-              <div
-                className="p-3 border rounded text-center h-100"
-                style={{ background: darkMode ? "#0b1220" : "#f8f9fb", transition: "background 0.3s ease" }}
-              >
-                <div className="small text-muted">Total Classes</div>
-                <div className="fw-bold fs-4">{classes.length}</div>
-              </div>
-            </div>
-
-            <div className="col-12 col-md-4">
-              <div
-                className="p-3 border rounded text-center h-100"
-                style={{ background: darkMode ? "#0b1220" : "#f8f9fb", transition: "background 0.3s ease" }}
-              >
-                <div className="small text-muted">Total Ratings</div>
-                <div className="fw-bold fs-4">{ratings.length}</div>
-              </div>
-            </div>
+        <div className="col-12 col-md-4">
+          <div
+            className="p-3 border rounded text-center"
+            style={{
+              background: darkMode ? "#0b1220" : "#f8f9fb",
+              transition: "background 0.3s ease",
+            }}
+          >
+            <div className="small text-muted">Total Ratings</div>
+            <div className="fw-bold fs-4">{ratings.length}</div>
           </div>
         </div>
       </div>
     </div>
-  </>
+  </div>
+</div>
+</div>
 )}
+
 
 {/* Assigned Courses */}
 {activeTab === "assigned" && (
@@ -815,47 +867,191 @@ const handleDeleteReport = async (report_id) => {
       </div>
     )}
 
-    {/* Reports Table */}
-    <div className="table-responsive mt-3">
-      <table className="table table-bordered table-hover align-middle">
-        <thead className="table-light">
-          <tr>
-            <th>#</th>
-            <th>Course</th>
-            <th>Class</th>
-            <th>Topic</th>
-            <th>Date</th>
-            <th>Week</th>
-            <th>PRL Feedback</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredReports.length ? (
-            filteredReports.map((r, i) => (
-              <tr key={r.report_id}>
-                <td>{i + 1}</td>
-                <td>{r.course_name}</td>
-                <td>{r.class_name}</td>
-                <td>{r.topic}</td>
-                <td>{r.date_of_lecture}</td>
-                <td>{r.week_of_reporting}</td>
-                <td>{r.prl_feedback || "Pending"}</td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="7" className="text-center text-muted">
-                No reports available.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+    <table className="table table-bordered table-hover align-middle">
+  <thead className="table-light">
+    <tr>
+      <th>#</th>
+      <th>Course</th>
+      <th>Class</th>
+      <th>Date</th>
+      <th>Week</th>
+      <th>PRL Feedback</th>
+      <th>Actions</th> 
+    </tr>
+  </thead>
+  <tbody>
+    {filteredReports.length ? (
+      filteredReports.map((r, i) => (
+        <tr key={r.report_id}>
+          <td>{i + 1}</td>
+          <td>{r.course_name}</td>
+          <td>{r.class_name}</td>
+          <td>{r.date_of_lecture}</td>
+          <td>{r.week_of_reporting}</td>
+          <td>{r.prl_feedback || "Pending"}</td>
+          <td>
+            <button
+              className="btn btn-sm btn-outline-primary rounded-pill"
+              onClick={() => handleEditClick(r)}
+            >
+              Edit
+            </button>
+          </td>
+        </tr>
+      ))
+    ) : (
+      <tr>
+        <td colSpan="8" className="text-center text-muted">
+          No reports available.
+        </td>
+      </tr>
+    )}
+  </tbody>
+</table>
+
+{editingReport && (
+  <div
+    className="modal fade show d-block"
+    style={{ background: "rgba(0,0,0,0.6)" }}
+    onClick={() => setEditingReport(null)}
+  >
+    <div
+      className="modal-dialog modal-lg modal-dialog-centered"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="modal-content rounded-4 border-0 shadow">
+        <div className="modal-header border-0">
+          <h5 className="modal-title">
+            Edit Report #{editingReport.report_id}
+          </h5>
+          <button
+            type="button"
+            className="btn-close"
+            onClick={() => setEditingReport(null)}
+          />
+        </div>
+
+        <div className="modal-body">
+          <div className="row g-3">
+            <div className="col-md-6">
+              <label className="form-label fw-semibold">Topic</label>
+              <input
+                type="text"
+                className="form-control"
+                value={editingReport.topic || ""}
+                onChange={(e) =>
+                  setEditingReport({ ...editingReport, topic: e.target.value })
+                }
+              />
+            </div>
+
+            <div className="col-md-6">
+              <label className="form-label fw-semibold">Date</label>
+              <input
+                type="date"
+                className="form-control"
+                value={editingReport.date_of_lecture || ""}
+                onChange={(e) =>
+                  setEditingReport({
+                    ...editingReport,
+                    date_of_lecture: e.target.value,
+                  })
+                }
+              />
+            </div>
+
+            <div className="col-md-6">
+              <label className="form-label fw-semibold">Week</label>
+              <input
+                type="number"
+                className="form-control"
+                value={editingReport.week_of_reporting || ""}
+                onChange={(e) =>
+                  setEditingReport({
+                    ...editingReport,
+                    week_of_reporting: e.target.value,
+                  })
+                }
+              />
+            </div>
+
+            <div className="col-md-6">
+              <label className="form-label fw-semibold">Actual Students</label>
+              <input
+                type="number"
+                className="form-control"
+                value={editingReport.actual_students || ""}
+                onChange={(e) =>
+                  setEditingReport({
+                    ...editingReport,
+                    actual_students: e.target.value,
+                  })
+                }
+              />
+            </div>
+
+            <div className="col-12">
+              <label className="form-label fw-semibold">Learning Outcomes</label>
+              <textarea
+                className="form-control"
+                rows={3}
+                value={editingReport.learning_outcomes || ""}
+                onChange={(e) =>
+                  setEditingReport({
+                    ...editingReport,
+                    learning_outcomes: e.target.value,
+                  })
+                }
+              />
+            </div>
+
+            <div className="col-12">
+              <label className="form-label fw-semibold">Recommendations</label>
+              <textarea
+                className="form-control"
+                rows={3}
+                value={editingReport.recommendations || ""}
+                onChange={(e) =>
+                  setEditingReport({
+                    ...editingReport,
+                    recommendations: e.target.value,
+                  })
+                }
+              />
+            </div>
+
+            <div className="col-12">
+              <label className="form-label fw-semibold">PRL Feedback</label>
+              <input
+                type="text"
+                className="form-control"
+                value={editingReport.prl_feedback || ""}
+                readOnly
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="modal-footer border-0">
+          <button
+            className="btn btn-secondary rounded-pill px-3"
+            onClick={() => setEditingReport(null)}
+          >
+            Cancel
+          </button>
+          <button
+            className="btn btn-primary rounded-pill px-4"
+            onClick={handleUpdateReport}
+          >
+            Save Changes
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 )}
-
-                  {/*MONITORING TAB */}
+</div>
+)}                  {/*MONITORING TAB */}
                   {activeTab === "monitoring" && (
                     <div>
                       <h4 className="mb-3">Monitoring Overview</h4>

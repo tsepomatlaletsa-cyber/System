@@ -191,6 +191,12 @@ function StudentDashboard() {
       });
   };
 
+  useEffect(() => {
+  document.body.style.backgroundColor = darkMode ? "#0b1220" : "#f9faff";
+  document.body.style.color = darkMode ? "#f8f9fa" : "#212529";
+}, [darkMode]);
+
+
   const handleDeleteRating = (id) => {
     if (!window.confirm("Are you sure you want to delete this rating?")) return;
     axios
@@ -281,7 +287,7 @@ function StudentDashboard() {
       <div className="d-flex" style={{ minHeight: "100vh", background: "linear-gradient(to right, #eef2ff, #f9faff)" }}>
         {/* Sidebar */}
         <aside
-          className="bg-white shadow-sm p-3 d-flex flex-column"
+           className={`shadow-sm p-3 d-flex flex-column ${darkMode ? "bg-dark" : "bg-white"}`}
           style={{
             width: collapsed ? 80 : 260,
             transition: "width 0.22s ease",
@@ -347,10 +353,10 @@ function StudentDashboard() {
           </div>
         </aside>
 
-        <div className="flex-grow-1 d-flex flex-column">
+                 <div className="flex-grow-1 d-flex flex-column">
                   {/* Top Navbar */}
                   <header
-                    className="bg-white shadow-sm px-4 py-3 d-flex align-items-center justify-content-between"
+                    className={`shadow-sm px-4 py-3 d-flex align-items-center justify-content-between ${darkMode ? "bg-secondary" : "bg-white"}`}
                     style={{
                       position: "sticky",
                       top: 0,
@@ -371,6 +377,7 @@ function StudentDashboard() {
                     </div>
         
                     <div className="d-flex align-items-center gap-3">
+                       <div className={`fw-semibold `}>{"WELCOME"}</div>
                       <button className="btn btn-light rounded-circle shadow-sm" aria-label="Notifications">
                         <FaBell className="text-primary" />
                       </button>
@@ -399,9 +406,11 @@ function StudentDashboard() {
                   animate="visible"
                   exit="exit"
                 >
-                  {/* Dashboard Cards + Top Rated Lecturers */}
+
+
+{/* Dashboard Cards */}
 {activeTab === "stats" && (
-  <>
+  <div>
     {/* Dashboard Cards */}
     <div className="row g-4">
       {[
@@ -434,63 +443,66 @@ function StudentDashboard() {
     </div>
 
     {/* Monitoring Overview */}
-    <div className="row g-4 mt-3">
-      <div className="col-12 col-lg-8">
-        <div
-          className="card p-3 shadow-sm rounded-4 h-100"
-          style={{ background: darkMode ? "#0b1220" : "#ffffff", transition: "background 0.3s ease" }}
-        >
-          <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between mb-3">
-            <h5 className="mb-2 mb-md-0">Monitoring Overview</h5>
-            <div className="small text-muted">{reports.length} classes</div>
-          </div>
+<div className="row g-4 mt-3">
+  <div className="col-12 col-xl-8">
+    <div
+      className="card p-3 shadow-sm rounded-4"
+      style={{ background: darkMode ? "#0b1220" : "#ffffff", transition: "background 0.3s ease" }}
+    >
+      {/* Header */}
+      <div className="d-flex align-items-center justify-content-between mb-3">
+        <h5 className="mb-0">Monitoring Overview</h5>
+        <div className="small text-muted">{reports.length} classes</div>
+      </div>
 
-          <div style={{ height: "360px", width: "100%", overflowX: "auto", paddingBottom: "0.5rem" }}>
-            <Bar
-              data={monitoringData}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: true, position: "bottom" } },
-              }}
-            />
-          </div>
+      {/* Chart */}
+      <div style={{ height: 360 }}>
+        <Bar
+          data={monitoringData}
+          options={{
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: true, position: "bottom" } },
+          }}
+        />
+      </div>
 
-          {/* Stats Summary */}
-          <div className="row g-3 mt-3">
-            <div className="col-12 col-sm-6 col-md-4">
-              <div
-                className="p-3 border rounded text-center h-100"
-                style={{ background: darkMode ? "#0b1220" : "#f8f9fb", transition: "background 0.3s ease" }}
-              >
-                <div className="small text-muted">Average Attendance</div>
-                <div className="fw-bold fs-4">{avgAttendance}%</div>
-              </div>
-            </div>
-            <div className="col-12 col-sm-6 col-md-4">
-              <div
-                className="p-3 border rounded text-center h-100"
-                style={{ background: darkMode ? "#0b1220" : "#f8f9fb", transition: "background 0.3s ease" }}
-              >
-                <div className="small text-muted">Total Classes</div>
-                <div className="fw-bold fs-4">{classes.length}</div>
-              </div>
-            </div>
-            <div className="col-12 col-md-4">
-              <div
-                className="p-3 border rounded text-center h-100"
-                style={{ background: darkMode ? "#0b1220" : "#f8f9fb", transition: "background 0.3s ease" }}
-              >
-                <div className="small text-muted">Total Ratings</div>
-                <div className="fw-bold fs-4">{ratings.length}</div>
-              </div>
-            </div>
+      {/* Stats Summary */}
+      <div className="row g-3 mt-3">
+        <div className="col-12 col-md-4">
+          <div
+            className="p-3 border rounded"
+            style={{ background: darkMode ? "#0b1220" : "#f8f9fb" }}
+          >
+            <div className="small text-muted">Average Attendance</div>
+            <div className="fw-bold fs-4">{avgAttendance}%</div>
+          </div>
+        </div>
+
+        <div className="col-12 col-md-4">
+          <div
+            className="p-3 border rounded"
+            style={{ background: darkMode ? "#0b1220" : "#f8f9fb" }}
+          >
+            <div className="small text-muted">Reports Reviewed</div>
+            <div className="fw-bold fs-4">{feedbackCount}</div>
+          </div>
+        </div>
+
+        <div className="col-12 col-md-4">
+          <div
+            className="p-3 border rounded"
+            style={{ background: darkMode ? "#0b1220" : "#f8f9fb" }}
+          >
+            <div className="small text-muted">Total Ratings</div>
+            <div className="fw-bold fs-4">{ratings.length}</div>
           </div>
         </div>
       </div>
-
-      </div>
-      </>
+    </div>
+  </div>
+</div>
+</div>
 )}
 
                   
@@ -686,10 +698,6 @@ function StudentDashboard() {
                       </form>
                     </div>
                   )}
-
-
-
-
 
 
                  {/* ----------------- Ratings Tab ----------------- */}
